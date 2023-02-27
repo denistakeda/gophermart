@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"gophermart/internal/core/services/logging"
 	"gophermart/internal/core/services/server"
 	"log"
 	"net/http"
@@ -9,13 +10,16 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	handler := createHandler()
 
-	srv := server.NewServer(":8080", handler)
+	// Services
+	logService := logging.New()
+	srv := server.NewServer(":8080", handler, logService)
 
 	srv.Start()
 
@@ -25,7 +29,8 @@ func main() {
 }
 
 func createHandler() http.Handler {
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.Recovery(), logger.SetLogger())
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
