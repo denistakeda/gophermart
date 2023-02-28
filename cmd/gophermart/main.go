@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"gophermart/internal/core/services/config"
+	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
 	"gophermart/internal/core/services/server"
 	"log"
@@ -15,10 +17,22 @@ import (
 )
 
 func main() {
+	logService := logging.New()
+	logger := logService.ComponentLogger("Main")
+
+	conf, err := config.GetConfig()
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to read configuration")
+	}
+
+	_, err = db.NewDB(conf.DatabaseDSN)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to initiate database")
+	}
+
 	handler := createHandler()
 
 	// Services
-	logService := logging.New()
 	srv := server.NewServer(":8080", handler, logService)
 
 	srv.Start()
