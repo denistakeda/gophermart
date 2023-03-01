@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
+	"gophermart/internal/api/user_api"
 	"gophermart/internal/core/services/config"
 	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
 	"gophermart/internal/core/services/server"
+	"gophermart/internal/core/services/user_service"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,23 +19,29 @@ import (
 
 func main() {
 	logService := logging.New()
-	logger := logService.ComponentLogger("Main")
+	mainLogger := logService.ComponentLogger("Main")
 
 	conf, err := config.GetConfig()
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to read configuration")
+		mainLogger.Fatal().Err(err).Msg("failed to read configuration")
 	}
 
 	_, err = db.NewDB(conf.DatabaseDSN)
 	if err != nil {
-		logger.Fatal().Err(err).Msg("failed to initiate database")
+		mainLogger.Fatal().Err(err).Msg("failed to initiate database")
 	}
 
-	handler := createHandler()
+	engine := createEngine()
 
 	// Services
-	srv := server.NewServer(":8080", handler, logService)
+	srv := server.NewServer(":8080", engine, logService)
+	userService := user_service.New(logService)
 
+	// APIs
+	userAPI := user_api.New(logService, userService)
+	userAPI.Register(engine)
+
+	// Start
 	srv.Start()
 
 	waitSigterm()
@@ -42,7 +49,7 @@ func main() {
 	srv.Stop(context.Background())
 }
 
-func createHandler() http.Handler {
+func createEngine() *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Recovery(), logger.SetLogger())
 	r.GET("/ping", func(c *gin.Context) {
