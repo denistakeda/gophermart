@@ -8,6 +8,7 @@ import (
 	"gophermart/internal/core/services/logging"
 	"gophermart/internal/core/services/server"
 	"gophermart/internal/core/services/user_service"
+	"gophermart/internal/core/stores/user_store"
 	"log"
 	"os"
 	"os/signal"
@@ -26,16 +27,19 @@ func main() {
 		mainLogger.Fatal().Err(err).Msg("failed to read configuration")
 	}
 
-	_, err = db.NewDB(conf.DatabaseDSN)
+	db, err := db.NewDB(conf.DatabaseDSN)
 	if err != nil {
 		mainLogger.Fatal().Err(err).Msg("failed to initiate database")
 	}
 
 	engine := createEngine()
 
+	// Stores
+	userStore := user_store.New(db)
+
 	// Services
 	srv := server.NewServer(":8080", engine, logService)
-	userService := user_service.New(logService)
+	userService := user_service.New(logService, userStore)
 
 	// APIs
 	userAPI := user_api.New(logService, userService)
