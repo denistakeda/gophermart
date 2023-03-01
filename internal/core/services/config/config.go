@@ -8,6 +8,7 @@ import (
 type Config struct {
 	Address     string `env:"ADDRESS" envDefault:"localhost:8080"`
 	DatabaseDSN string `env:"DATABASE_DSN" envDefault:"postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable"`
+	Secret      string `env:"SECRET" endDefault:"secret"`
 }
 
 func GetConfig() (Config, error) {

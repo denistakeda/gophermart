@@ -47,6 +47,7 @@ func (api *UserAPI) registerUser(c *gin.Context) {
 		return
 	} else if err != nil {
 		api.reportError(c, err, http.StatusInternalServerError, "server error")
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})

@@ -6,6 +6,7 @@ services:
     working_dir: /server
     environment:
       - DATABASE_DSN=postgresql://postgres:postgres@database:5432/postgres?sslmode=disable
+      - SECRET="secret key"
     ports:
       - "8080:8080"
     volumes:

@@ -6,11 +6,13 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/gin-contrib/logger v0.2.5
 	github.com/gin-gonic/gin v1.9.0
+	github.com/golang-jwt/jwt/v5 v5.0.0-rc.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.29.0
+	golang.org/x/crypto v0.6.0
 )
 
 require (
@@ -38,7 +40,6 @@ require (
 	github.com/ugorji/go/codec v1.2.10 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	golang.org/x/arch v0.2.0 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect

@@ -39,7 +39,7 @@ func main() {
 
 	// Services
 	srv := server.NewServer(":8080", engine, logService)
-	userService := user_service.New(logService, userStore)
+	userService := user_service.New(conf.Secret, logService, userStore)
 
 	// APIs
 	userAPI := user_api.New(logService, userService)
