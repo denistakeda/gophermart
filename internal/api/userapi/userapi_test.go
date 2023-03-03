@@ -1,9 +1,9 @@
-package user_api
+package userapi
 
 import (
 	"bytes"
 	"encoding/json"
-	"gophermart/internal/core/app_errors"
+	"gophermart/internal/core/apperrors"
 	"gophermart/internal/core/services/logging"
 	mocks "gophermart/mocks/core/ports"
 	"net/http"
@@ -48,7 +48,7 @@ func TestRegisterNewUser(t *testing.T) {
 			requestBody: makeRegisterUserBody(t, "user", "password"),
 			serviceCall: &serviceCall{
 				args:    []interface{}{gomock.Any(), "user", "password"},
-				returns: []interface{}{"", errors.Wrap(app_errors.ErrLoginIsBusy, "test error")},
+				returns: []interface{}{"", errors.Wrap(apperrors.ErrLoginIsBusy, "test error")},
 				times:   1,
 			},
 			want: want{

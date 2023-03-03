@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
-	"gophermart/internal/api/user_api"
+	"gophermart/internal/api/userapi"
 	"gophermart/internal/core/services/config"
 	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
 	"gophermart/internal/core/services/server"
-	"gophermart/internal/core/services/user_service"
-	"gophermart/internal/core/stores/user_store"
+	"gophermart/internal/core/services/userservice"
+	"gophermart/internal/core/stores/userstore"
 	"log"
 	"os"
 	"os/signal"
@@ -35,14 +35,14 @@ func main() {
 	engine := createEngine()
 
 	// Stores
-	userStore := user_store.New(db)
+	userStore := userstore.New(db)
 
 	// Services
 	srv := server.NewServer(":8080", engine, logService)
-	userService := user_service.New(conf.Secret, logService, userStore)
+	userService := userservice.New(conf.Secret, logService, userStore)
 
 	// APIs
-	userAPI := user_api.New(logService, userService)
+	userAPI := userapi.New(logService, userService)
 	userAPI.Register(engine)
 
 	// Start

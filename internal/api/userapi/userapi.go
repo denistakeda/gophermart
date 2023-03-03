@@ -1,8 +1,8 @@
-package user_api
+package userapi
 
 import (
 	"fmt"
-	"gophermart/internal/core/app_errors"
+	"gophermart/internal/core/apperrors"
 	"gophermart/internal/core/ports"
 	"gophermart/internal/core/services/logging"
 	"net/http"
@@ -43,7 +43,7 @@ func (api *UserAPI) registerUser(c *gin.Context) {
 	}
 
 	token, err := api.userService.RegisterUser(c, body.Login, body.Password)
-	if errors.Is(err, app_errors.ErrLoginIsBusy) {
+	if errors.Is(err, apperrors.ErrLoginIsBusy) {
 		api.reportError(c, err, http.StatusConflict, "login is busy")
 		return
 	} else if err != nil {

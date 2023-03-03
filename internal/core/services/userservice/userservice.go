@@ -1,8 +1,8 @@
-package user_service
+package userservice
 
 import (
 	"context"
-	"gophermart/internal/core/app_errors"
+	"gophermart/internal/core/apperrors"
 	"gophermart/internal/core/ports"
 	"gophermart/internal/core/services/logging"
 	"time"
@@ -29,11 +29,11 @@ func New(secret string, logService *logging.LoggerService, userStore ports.UserS
 
 func (u *UserService) RegisterUser(ctx context.Context, login, password string) (string, error) {
 	if login == "" {
-		return "", app_errors.ErrLoginIsEmpty
+		return "", apperrors.ErrLoginIsEmpty
 	}
 
 	if password == "" {
-		return "", app_errors.ErrPasswordIsEmpty
+		return "", apperrors.ErrPasswordIsEmpty
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
@@ -43,7 +43,7 @@ func (u *UserService) RegisterUser(ctx context.Context, login, password string) 
 
 	if err := u.userStore.AddNewUser(ctx, login, string(passwordHash)); err != nil {
 		u.logger.Error().Err(err).Msg("failed to add a new user")
-		return "", errors.Wrapf(app_errors.ErrLoginIsBusy, "login '%s' is busy", login)
+		return "", errors.Wrapf(apperrors.ErrLoginIsBusy, "login '%s' is busy", login)
 	}
 
 	return u.generateJWT(login)

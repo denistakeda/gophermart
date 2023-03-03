@@ -1,4 +1,4 @@
-package user_store
+package userstore
 
 import (
 	"context"
