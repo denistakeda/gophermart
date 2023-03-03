@@ -9,13 +9,13 @@ import (
 	"gophermart/internal/core/services/server"
 	"gophermart/internal/core/services/userservice"
 	"gophermart/internal/core/stores/userstore"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 func main() {
@@ -48,7 +48,7 @@ func main() {
 	// Start
 	srv.Start()
 
-	waitSigterm()
+	waitSigterm(mainLogger)
 
 	srv.Stop(context.Background())
 }
@@ -64,9 +64,9 @@ func createEngine() *gin.Engine {
 	return r
 }
 
-func waitSigterm() {
+func waitSigterm(logger zerolog.Logger) {
 	quit := make(chan os.Signal, 2)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-	log.Println("Server was interrupted. Shutdown server.")
+	logger.Warn().Msg("Server was interrupted. Shutdown server.")
 }
