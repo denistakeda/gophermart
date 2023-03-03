@@ -1,6 +1,7 @@
 package user_api
 
 import (
+	"fmt"
 	"gophermart/internal/core/app_errors"
 	"gophermart/internal/core/ports"
 	"gophermart/internal/core/services/logging"
@@ -36,7 +37,7 @@ type registerUserBody struct {
 
 func (api *UserAPI) registerUser(c *gin.Context) {
 	var body registerUserBody
-	if err := c.ShouldBind(&body); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		api.reportError(c, err, http.StatusBadRequest, "invalid body")
 		return
 	}
@@ -50,6 +51,7 @@ func (api *UserAPI) registerUser(c *gin.Context) {
 		return
 	}
 
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
