@@ -65,7 +65,7 @@ func createEngine() *gin.Engine {
 }
 
 func waitSigterm() {
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 2)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Server was interrupted. Shutdown server.")
