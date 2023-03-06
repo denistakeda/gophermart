@@ -47,3 +47,18 @@ func (mr *MockUserStoreMockRecorder) AddNewUser(arg0, arg1, arg2 interface{}) *g
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewUser", reflect.TypeOf((*MockUserStore)(nil).AddNewUser), arg0, arg1, arg2)
 }
+
+// IsUserExist mocks base method.
+func (m *MockUserStore) IsUserExist(arg0 context.Context, arg1, arg2 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUserExist", arg0, arg1, arg2)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsUserExist indicates an expected call of IsUserExist.
+func (mr *MockUserStoreMockRecorder) IsUserExist(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUserExist", reflect.TypeOf((*MockUserStore)(nil).IsUserExist), arg0, arg1, arg2)
+}

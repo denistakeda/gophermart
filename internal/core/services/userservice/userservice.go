@@ -49,6 +49,36 @@ func (u *UserService) RegisterUser(ctx context.Context, login, password string) 
 	return u.generateJWT(login)
 }
 
+func (u *UserService) LoginUser(ctx context.Context, login, password string) (string, error) {
+	if login == "" {
+		return "", apperrors.ErrLoginIsEmpty
+	}
+
+	if password == "" {
+		return "", apperrors.ErrPasswordIsEmpty
+	}
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate password hash")
+	}
+
+	isUserExist, err := u.userStore.IsUserExist(ctx, login, string(passwordHash))
+	if err != nil {
+		msg := "failed to check if user exist"
+		u.logger.Error().Err(err).Msg(msg)
+		return "", errors.Wrap(err, msg)
+	}
+	if !isUserExist {
+		return "", errors.Wrap(
+			apperrors.ErrLoginOrPasswordIncorrect,
+			"user with such login/password does not exist",
+		)
+	}
+
+	return u.generateJWT(login)
+}
+
 func (u *UserService) generateJWT(login string) (string, error) {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
