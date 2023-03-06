@@ -1,8 +1,11 @@
 package ports
 
-import "context"
+import (
+	"context"
+	"gophermart/internal/core/domain"
+)
 
 type UserStore interface {
 	AddNewUser(ctx context.Context, login, passwordHash string) error
-	IsUserExist(ctx context.Context, login, passwordHash string) (bool, error)
+	GetUser(ctx context.Context, login string) (domain.User, error)
 }

@@ -58,18 +58,15 @@ func (u *UserService) LoginUser(ctx context.Context, login, password string) (st
 		return "", apperrors.ErrPasswordIsEmpty
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
+	user, err := u.userStore.GetUser(ctx, login)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to generate password hash")
+		return "", errors.Wrap(
+			apperrors.ErrLoginOrPasswordIncorrect,
+			"user with such login/password does not exist",
+		)
 	}
 
-	isUserExist, err := u.userStore.IsUserExist(ctx, login, string(passwordHash))
-	if err != nil {
-		msg := "failed to check if user exist"
-		u.logger.Error().Err(err).Msg(msg)
-		return "", errors.Wrap(err, msg)
-	}
-	if !isUserExist {
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", errors.Wrap(
 			apperrors.ErrLoginOrPasswordIncorrect,
 			"user with such login/password does not exist",

@@ -3,6 +3,7 @@ package userservice
 import (
 	"context"
 	"gophermart/internal/core/apperrors"
+	"gophermart/internal/core/domain"
 	"gophermart/internal/core/services/logging"
 	mock "gophermart/mocks/core/ports"
 	"testing"
@@ -126,7 +127,7 @@ func TestUserService_LoginUser(t *testing.T) {
 	}
 	type storeCall struct {
 		args     []interface{}
-		returns1 bool
+		returns1 domain.User
 		returns2 error
 		times    int
 	}
@@ -166,7 +167,7 @@ func TestUserService_LoginUser(t *testing.T) {
 			},
 			storeCall: &storeCall{
 				args:     []interface{}{gomock.Any(), "login", gomock.Any()},
-				returns1: false,
+				returns1: domain.User{},
 				returns2: nil,
 				times:    1,
 			},
@@ -183,12 +184,12 @@ func TestUserService_LoginUser(t *testing.T) {
 			},
 			storeCall: &storeCall{
 				args:     []interface{}{gomock.Any(), "login", gomock.Any()},
-				returns1: true,
+				returns1: domain.User{},
 				returns2: nil,
 				times:    1,
 			},
 			want: want{
-				errorIs: nil,
+				errorIs: apperrors.ErrLoginOrPasswordIncorrect,
 				token:   false,
 			},
 		},
@@ -203,7 +204,7 @@ func TestUserService_LoginUser(t *testing.T) {
 			if tt.storeCall != nil {
 				userStore.
 					EXPECT().
-					IsUserExist(tt.storeCall.args[0], tt.storeCall.args[1], tt.storeCall.args[2]).
+					GetUser(tt.storeCall.args[0], tt.storeCall.args[1]).
 					Return(tt.storeCall.returns1, tt.storeCall.returns2).
 					Times(tt.storeCall.times)
 			}

@@ -2,6 +2,7 @@ package userstore
 
 import (
 	"context"
+	"gophermart/internal/core/domain"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -25,4 +26,16 @@ func (u *UserStore) AddNewUser(ctx context.Context, login, passwordHash string) 
 	}
 
 	return nil
+}
+
+func (u *UserStore) GetUser(ctx context.Context, login string) (domain.User, error) {
+	var user domain.User
+	if err := u.db.GetContext(ctx, &user, `
+		select login, password from users
+		where login=$1
+	`, login); err != nil {
+		return user, errors.Wrap(err, "failed to get user from database")
+	}
+
+	return user, nil
 }

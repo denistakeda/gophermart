@@ -6,6 +6,7 @@ package ports
 
 import (
 	context "context"
+	domain "gophermart/internal/core/domain"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -48,17 +49,17 @@ func (mr *MockUserStoreMockRecorder) AddNewUser(arg0, arg1, arg2 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewUser", reflect.TypeOf((*MockUserStore)(nil).AddNewUser), arg0, arg1, arg2)
 }
 
-// IsUserExist mocks base method.
-func (m *MockUserStore) IsUserExist(arg0 context.Context, arg1, arg2 string) (bool, error) {
+// GetUser mocks base method.
+func (m *MockUserStore) GetUser(arg0 context.Context, arg1 string) (domain.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsUserExist", arg0, arg1, arg2)
-	ret0, _ := ret[0].(bool)
+	ret := m.ctrl.Call(m, "GetUser", arg0, arg1)
+	ret0, _ := ret[0].(domain.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// IsUserExist indicates an expected call of IsUserExist.
-func (mr *MockUserStoreMockRecorder) IsUserExist(arg0, arg1, arg2 interface{}) *gomock.Call {
+// GetUser indicates an expected call of GetUser.
+func (mr *MockUserStoreMockRecorder) GetUser(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUserExist", reflect.TypeOf((*MockUserStore)(nil).IsUserExist), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUser", reflect.TypeOf((*MockUserStore)(nil).GetUser), arg0, arg1)
 }
