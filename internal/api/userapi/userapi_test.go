@@ -36,7 +36,7 @@ func TestRegisterNewUser(t *testing.T) {
 		want want
 	}{
 		{
-			name:        "empty body",
+			name:        "incorrect body",
 			requestBody: []byte("hello there"),
 			want: want{
 				status:               http.StatusBadRequest,
@@ -45,7 +45,7 @@ func TestRegisterNewUser(t *testing.T) {
 		},
 		{
 			name:        "user already exists",
-			requestBody: makeRegisterUserBody(t, "user", "password"),
+			requestBody: makeUserBody(t, "user", "password"),
 			serviceCall: &serviceCall{
 				args:    []interface{}{gomock.Any(), "user", "password"},
 				returns: []interface{}{"", errors.Wrap(apperrors.ErrLoginIsBusy, "test error")},
@@ -58,7 +58,7 @@ func TestRegisterNewUser(t *testing.T) {
 		},
 		{
 			name:        "internal error",
-			requestBody: makeRegisterUserBody(t, "user", "password"),
+			requestBody: makeUserBody(t, "user", "password"),
 			serviceCall: &serviceCall{
 				args:    []interface{}{gomock.Any(), "user", "password"},
 				returns: []interface{}{"", errors.New("test error")},
@@ -71,7 +71,7 @@ func TestRegisterNewUser(t *testing.T) {
 		},
 		{
 			name:        "success case",
-			requestBody: makeRegisterUserBody(t, "user", "password"),
+			requestBody: makeUserBody(t, "user", "password"),
 			serviceCall: &serviceCall{
 				args:    []interface{}{gomock.Any(), "user", "password"},
 				returns: []interface{}{"token", nil},
@@ -121,8 +121,111 @@ func TestRegisterNewUser(t *testing.T) {
 	}
 }
 
-func makeRegisterUserBody(t *testing.T, login, password string) []byte {
-	body := registerUserBody{
+func TestLoginUser(t *testing.T) {
+	type want struct {
+		status               int
+		shouldHaveAuthHeader bool
+	}
+	type serviceCall struct {
+		args    []any
+		returns []any
+		times   int
+	}
+	tests := []struct {
+		name        string
+		requestBody []byte
+		serviceCall *serviceCall
+
+		want want
+	}{
+		{
+			name:        "incorrect body",
+			requestBody: []byte("hello there"),
+			want: want{
+				status:               http.StatusBadRequest,
+				shouldHaveAuthHeader: false,
+			},
+		},
+		{
+			name:        "incorrect login or password",
+			requestBody: makeUserBody(t, "user", "password"),
+			serviceCall: &serviceCall{
+				args:    []interface{}{gomock.Any(), "user", "password"},
+				returns: []interface{}{"", errors.Wrap(apperrors.ErrLoginOrPasswordIncorrect, "test error")},
+				times:   1,
+			},
+			want: want{
+				status:               http.StatusUnauthorized,
+				shouldHaveAuthHeader: false,
+			},
+		},
+		{
+			name:        "internal error",
+			requestBody: makeUserBody(t, "user", "password"),
+			serviceCall: &serviceCall{
+				args:    []interface{}{gomock.Any(), "user", "password"},
+				returns: []interface{}{"", errors.New("test error")},
+				times:   1,
+			},
+			want: want{
+				status:               http.StatusInternalServerError,
+				shouldHaveAuthHeader: false,
+			},
+		},
+		{
+			name:        "success case",
+			requestBody: makeUserBody(t, "user", "password"),
+			serviceCall: &serviceCall{
+				args:    []interface{}{gomock.Any(), "user", "password"},
+				returns: []interface{}{"token", nil},
+				times:   1,
+			},
+			want: want{
+				status:               http.StatusOK,
+				shouldHaveAuthHeader: true,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			userService := mocks.NewMockUserService(ctrl)
+			router := gin.New()
+			logService := logging.New()
+			userAPI := New(logService, userService)
+			userAPI.Register(router)
+
+			if tt.serviceCall != nil {
+				userService.EXPECT().
+					LoginUser(tt.serviceCall.args[0], tt.serviceCall.args[1], tt.serviceCall.args[2]).
+					Return(tt.serviceCall.returns[0], tt.serviceCall.returns[1]).
+					Times(tt.serviceCall.times)
+			}
+
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(tt.requestBody))
+			req.Header.Set("Content-Type", "application/json")
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.want.status, w.Code)
+
+			header := w.Header().Get("Authorization")
+			if tt.want.shouldHaveAuthHeader {
+				assert.NotEmptyf(t, header, "authorization header should be presented")
+				assert.True(
+					t,
+					strings.Contains(header, "Bearer"),
+					"authorization header should start with 'Bearer'",
+				)
+			} else {
+				assert.Empty(t, header)
+			}
+		})
+	}
+}
+
+func makeUserBody(t *testing.T, login, password string) []byte {
+	body := userBody{
 		Login:    login,
 		Password: password,
 	}

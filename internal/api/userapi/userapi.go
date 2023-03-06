@@ -12,6 +12,11 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var (
+	AuthorizationHeaderName = "Authorization"
+	UserKey                 = "user"
+)
+
 type UserAPI struct {
 	logger      zerolog.Logger
 	userService ports.UserService
@@ -27,16 +32,17 @@ func New(logService *logging.LoggerService, userService ports.UserService) *User
 func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup := engine.Group("/api/user")
 
-	userGroup.POST("/register", api.registerUser)
+	userGroup.POST("/register", api.registerUserHandler)
+	userGroup.POST("/login", api.loginUserHandler)
 }
 
-type registerUserBody struct {
+type userBody struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-func (api *UserAPI) registerUser(c *gin.Context) {
-	var body registerUserBody
+func (api *UserAPI) registerUserHandler(c *gin.Context) {
+	var body userBody
 	if err := c.ShouldBindJSON(&body); err != nil {
 		api.reportError(c, err, http.StatusBadRequest, "invalid body")
 		return
@@ -45,6 +51,26 @@ func (api *UserAPI) registerUser(c *gin.Context) {
 	token, err := api.userService.RegisterUser(c, body.Login, body.Password)
 	if errors.Is(err, apperrors.ErrLoginIsBusy) {
 		api.reportError(c, err, http.StatusConflict, "login is busy")
+		return
+	} else if err != nil {
+		api.reportError(c, err, http.StatusInternalServerError, "server error")
+		return
+	}
+
+	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (api *UserAPI) loginUserHandler(c *gin.Context) {
+	var body userBody
+	if err := c.ShouldBindJSON(&body); err != nil {
+		api.reportError(c, err, http.StatusBadRequest, "invalid body")
+		return
+	}
+
+	token, err := api.userService.LoginUser(c, body.Login, body.Password)
+	if errors.Is(err, apperrors.ErrLoginOrPasswordIncorrect) {
+		api.reportError(c, err, http.StatusUnauthorized, "login or password incorrect")
 		return
 	} else if err != nil {
 		api.reportError(c, err, http.StatusInternalServerError, "server error")
