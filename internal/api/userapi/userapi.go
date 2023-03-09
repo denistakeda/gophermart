@@ -34,6 +34,8 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 
 	userGroup.POST("/register", api.registerUserHandler)
 	userGroup.POST("/login", api.loginUserHandler)
+
+	userGroup.POST("/orders", api.authMiddleware, api.registerOrder)
 }
 
 type userBody struct {
@@ -79,6 +81,10 @@ func (api *UserAPI) loginUserHandler(c *gin.Context) {
 
 	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
 	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (api *UserAPI) registerOrder(c *gin.Context) {
+	_ = c.MustGet(UserKey)
 }
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {

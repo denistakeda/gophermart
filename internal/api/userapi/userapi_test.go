@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"gophermart/internal/core/apperrors"
+	"gophermart/internal/core/domain"
 	"gophermart/internal/core/services/logging"
 	mocks "gophermart/mocks/core/ports"
 	"net/http"
@@ -220,6 +221,129 @@ func TestLoginUser(t *testing.T) {
 			} else {
 				assert.Empty(t, header)
 			}
+		})
+	}
+}
+
+func TestRegisterOrder(t *testing.T) {
+	type want struct {
+		status int
+	}
+	type serviceCall struct {
+		args    []any
+		returns []any
+		times   int
+	}
+	tests := []struct {
+		name                 string
+		requestBody          []byte
+		authHeader           string
+		authenticateUserCall *serviceCall
+
+		want want
+	}{
+		{
+			name:        "missing auth header",
+			requestBody: []byte("test body"),
+			authHeader:  "",
+			// authenticateUserCall: &serviceCall{
+			// 	args: []any{gomock.Any(), }
+			// },
+			want: want{
+				status: http.StatusUnauthorized,
+			},
+		},
+		{
+			name:        "incorrect auth header",
+			requestBody: []byte("test body"),
+			authHeader:  "Onetwothree",
+			// authenticateUserCall: &serviceCall{
+			// 	args: []any{gomock.Any(), }
+			// },
+			want: want{
+				status: http.StatusUnauthorized,
+			},
+		},
+		{
+			name:        "missing auth token",
+			requestBody: []byte("test body"),
+			authHeader:  "Bearer",
+			// authenticateUserCall: &serviceCall{
+			// 	args: []any{gomock.Any(), }
+			// },
+			want: want{
+				status: http.StatusUnauthorized,
+			},
+		},
+		{
+			name:        "authentication failed",
+			requestBody: []byte("test body"),
+			authHeader:  "Bearer authtoken",
+			authenticateUserCall: &serviceCall{
+				args:    []any{gomock.Any(), "authtoken"},
+				returns: []any{domain.User{}, errors.Wrap(apperrors.ErrAuthFailed, "test error")},
+				times:   1,
+			},
+			want: want{
+				status: http.StatusUnauthorized,
+			},
+		},
+		{
+			name:        "unknown service error",
+			requestBody: []byte("test body"),
+			authHeader:  "Bearer authtoken",
+			authenticateUserCall: &serviceCall{
+				args:    []any{gomock.Any(), "authtoken"},
+				returns: []any{domain.User{}, errors.New("test error")},
+				times:   1,
+			},
+			want: want{
+				status: http.StatusInternalServerError,
+			},
+		},
+		// TODO: remove this test
+		{
+			name:        "successful authentication",
+			requestBody: []byte("test body"),
+			authHeader:  "Bearer authtoken",
+			authenticateUserCall: &serviceCall{
+				args:    []any{gomock.Any(), "authtoken"},
+				returns: []any{domain.User{Login: "user", Password: "password"}, nil},
+				times:   1,
+			},
+			want: want{
+				status: http.StatusOK,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			userService := mocks.NewMockUserService(ctrl)
+			router := gin.New()
+			logService := logging.New()
+			userAPI := New(logService, userService)
+			userAPI.Register(router)
+
+			if tt.authenticateUserCall != nil {
+				userService.EXPECT().
+					AuthenticateUser(tt.authenticateUserCall.args[0], tt.authenticateUserCall.args[1]).
+					Return(tt.authenticateUserCall.returns[0], tt.authenticateUserCall.returns[1]).
+					Times(tt.authenticateUserCall.times)
+			}
+
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", "/api/user/orders", bytes.NewReader(tt.requestBody))
+
+			req.Header.Set("Content-Type", "text/plain")
+
+			if tt.authHeader != "" {
+				req.Header.Set("Authorization", tt.authHeader)
+			}
+
+			router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.want.status, w.Code)
 		})
 	}
 }

@@ -6,6 +6,7 @@ package ports
 
 import (
 	context "context"
+	domain "gophermart/internal/core/domain"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -32,6 +33,21 @@ func NewMockUserService(ctrl *gomock.Controller) *MockUserService {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
+}
+
+// AuthenticateUser mocks base method.
+func (m *MockUserService) AuthenticateUser(arg0 context.Context, arg1 string) (domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AuthenticateUser", arg0, arg1)
+	ret0, _ := ret[0].(domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AuthenticateUser indicates an expected call of AuthenticateUser.
+func (mr *MockUserServiceMockRecorder) AuthenticateUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AuthenticateUser", reflect.TypeOf((*MockUserService)(nil).AuthenticateUser), arg0, arg1)
 }
 
 // LoginUser mocks base method.
