@@ -86,15 +86,10 @@ func TestRegisterNewUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			userService := mocks.NewMockUserService(ctrl)
-			router := gin.New()
-			logService := logging.New()
-			userAPI := New(logService, userService)
-			userAPI.Register(router)
+			apiTest := NewApiTest(t)
 
 			if tt.serviceCall != nil {
-				userService.EXPECT().
+				apiTest.UserService.EXPECT().
 					RegisterUser(tt.serviceCall.args[0], tt.serviceCall.args[1], tt.serviceCall.args[2]).
 					Return(tt.serviceCall.returns[0], tt.serviceCall.returns[1]).
 					Times(tt.serviceCall.times)
@@ -103,7 +98,7 @@ func TestRegisterNewUser(t *testing.T) {
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", "/api/user/register", bytes.NewReader(tt.requestBody))
 			req.Header.Set("Content-Type", "application/json")
-			router.ServeHTTP(w, req)
+			apiTest.Router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.want.status, w.Code)
 
@@ -189,15 +184,10 @@ func TestLoginUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			userService := mocks.NewMockUserService(ctrl)
-			router := gin.New()
-			logService := logging.New()
-			userAPI := New(logService, userService)
-			userAPI.Register(router)
+			apiTest := NewApiTest(t)
 
 			if tt.serviceCall != nil {
-				userService.EXPECT().
+				apiTest.UserService.EXPECT().
 					LoginUser(tt.serviceCall.args[0], tt.serviceCall.args[1], tt.serviceCall.args[2]).
 					Return(tt.serviceCall.returns[0], tt.serviceCall.returns[1]).
 					Times(tt.serviceCall.times)
@@ -206,7 +196,7 @@ func TestLoginUser(t *testing.T) {
 			w := httptest.NewRecorder()
 			req, _ := http.NewRequest("POST", "/api/user/login", bytes.NewReader(tt.requestBody))
 			req.Header.Set("Content-Type", "application/json")
-			router.ServeHTTP(w, req)
+			apiTest.Router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.want.status, w.Code)
 
@@ -225,11 +215,11 @@ func TestLoginUser(t *testing.T) {
 	}
 }
 
-func TestRegisterOrder(t *testing.T) {
+func TestAuthMiddleware(t *testing.T) {
 	type want struct {
 		status int
 	}
-	type serviceCall struct {
+	type authenticateUserCall struct {
 		args    []any
 		returns []any
 		times   int
@@ -238,7 +228,7 @@ func TestRegisterOrder(t *testing.T) {
 		name                 string
 		requestBody          []byte
 		authHeader           string
-		authenticateUserCall *serviceCall
+		authenticateUserCall *authenticateUserCall
 
 		want want
 	}{
@@ -246,9 +236,6 @@ func TestRegisterOrder(t *testing.T) {
 			name:        "missing auth header",
 			requestBody: []byte("test body"),
 			authHeader:  "",
-			// authenticateUserCall: &serviceCall{
-			// 	args: []any{gomock.Any(), }
-			// },
 			want: want{
 				status: http.StatusUnauthorized,
 			},
@@ -257,9 +244,6 @@ func TestRegisterOrder(t *testing.T) {
 			name:        "incorrect auth header",
 			requestBody: []byte("test body"),
 			authHeader:  "Onetwothree",
-			// authenticateUserCall: &serviceCall{
-			// 	args: []any{gomock.Any(), }
-			// },
 			want: want{
 				status: http.StatusUnauthorized,
 			},
@@ -268,9 +252,6 @@ func TestRegisterOrder(t *testing.T) {
 			name:        "missing auth token",
 			requestBody: []byte("test body"),
 			authHeader:  "Bearer",
-			// authenticateUserCall: &serviceCall{
-			// 	args: []any{gomock.Any(), }
-			// },
 			want: want{
 				status: http.StatusUnauthorized,
 			},
@@ -279,7 +260,7 @@ func TestRegisterOrder(t *testing.T) {
 			name:        "authentication failed",
 			requestBody: []byte("test body"),
 			authHeader:  "Bearer authtoken",
-			authenticateUserCall: &serviceCall{
+			authenticateUserCall: &authenticateUserCall{
 				args:    []any{gomock.Any(), "authtoken"},
 				returns: []any{domain.User{}, errors.Wrap(apperrors.ErrAuthFailed, "test error")},
 				times:   1,
@@ -292,7 +273,7 @@ func TestRegisterOrder(t *testing.T) {
 			name:        "unknown service error",
 			requestBody: []byte("test body"),
 			authHeader:  "Bearer authtoken",
-			authenticateUserCall: &serviceCall{
+			authenticateUserCall: &authenticateUserCall{
 				args:    []any{gomock.Any(), "authtoken"},
 				returns: []any{domain.User{}, errors.New("test error")},
 				times:   1,
@@ -301,12 +282,11 @@ func TestRegisterOrder(t *testing.T) {
 				status: http.StatusInternalServerError,
 			},
 		},
-		// TODO: remove this test
 		{
-			name:        "successful authentication",
-			requestBody: []byte("test body"),
+			name:        "successfull authorization",
+			requestBody: []byte("text-order-number"),
 			authHeader:  "Bearer authtoken",
-			authenticateUserCall: &serviceCall{
+			authenticateUserCall: &authenticateUserCall{
 				args:    []any{gomock.Any(), "authtoken"},
 				returns: []any{domain.User{Login: "user", Password: "password"}, nil},
 				times:   1,
@@ -318,33 +298,62 @@ func TestRegisterOrder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			userService := mocks.NewMockUserService(ctrl)
-			router := gin.New()
-			logService := logging.New()
-			userAPI := New(logService, userService)
-			userAPI.Register(router)
+			apiTest := NewApiTest(t)
+			apiTest.Router.GET("/authmiddleware", apiTest.UserAPI.AuthMiddleware, func(c *gin.Context) {
+				val, exists := c.Get(UserKey)
+				assert.True(t, exists, "middleware should assign a user")
+				_, ok := val.(domain.User)
+				assert.True(t, ok, "middleware should assign a value of type user")
+				c.JSON(http.StatusOK, gin.H{"success": true})
+			})
 
 			if tt.authenticateUserCall != nil {
-				userService.EXPECT().
+				apiTest.UserService.EXPECT().
 					AuthenticateUser(tt.authenticateUserCall.args[0], tt.authenticateUserCall.args[1]).
 					Return(tt.authenticateUserCall.returns[0], tt.authenticateUserCall.returns[1]).
 					Times(tt.authenticateUserCall.times)
 			}
 
 			w := httptest.NewRecorder()
-			req, _ := http.NewRequest("POST", "/api/user/orders", bytes.NewReader(tt.requestBody))
-
-			req.Header.Set("Content-Type", "text/plain")
+			req, _ := http.NewRequest("GET", "/authmiddleware", bytes.NewReader(tt.requestBody))
 
 			if tt.authHeader != "" {
 				req.Header.Set("Authorization", tt.authHeader)
 			}
 
-			router.ServeHTTP(w, req)
+			apiTest.Router.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.want.status, w.Code)
 		})
+	}
+}
+
+// -- Test helpers --
+
+type ApiTest struct {
+	Router       *gin.Engine
+	UserService  *mocks.MockUserService
+	OrderService *mocks.MockOrderService
+	UserAPI      *UserAPI
+	LogService   *logging.LoggerService
+}
+
+func NewApiTest(t *testing.T) *ApiTest {
+	ctrl := gomock.NewController(t)
+	userService := mocks.NewMockUserService(ctrl)
+	router := gin.New()
+	logService := logging.New()
+	orderService := mocks.NewMockOrderService(ctrl)
+	userAPI := New(logService, userService, orderService)
+
+	userAPI.Register(router)
+
+	return &ApiTest{
+		Router:       router,
+		UserService:  userService,
+		OrderService: orderService,
+		UserAPI:      userAPI,
+		LogService:   logService,
 	}
 }
 

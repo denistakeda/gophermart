@@ -10,3 +10,7 @@ type UserService interface {
 	LoginUser(ctx context.Context, login, password string) (string, error)
 	AuthenticateUser(ctx context.Context, token string) (domain.User, error)
 }
+
+type OrderService interface {
+	AddOrder(ctx context.Context, orderNumber string) error
+}

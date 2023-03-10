@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (api *UserAPI) authMiddleware(c *gin.Context) {
+func (api *UserAPI) AuthMiddleware(c *gin.Context) {
 	authHeader := c.GetHeader(AuthorizationHeaderName)
 	if authHeader == "" {
 		msg := "missing auth header"
@@ -17,14 +17,14 @@ func (api *UserAPI) authMiddleware(c *gin.Context) {
 		return
 	}
 
-	splited := strings.Split(authHeader, " ")
-	if len(splited) < 2 || splited[0] != "Bearer" {
+	split := strings.Split(authHeader, " ")
+	if len(split) < 2 || split[0] != "Bearer" {
 		msg := "auth header incorrect"
 		api.reportError(c, errors.New(msg), http.StatusUnauthorized, msg)
 		return
 	}
 
-	user, err := api.userService.AuthenticateUser(c, splited[1])
+	user, err := api.userService.AuthenticateUser(c, split[1])
 	if errors.Is(err, apperrors.ErrAuthFailed) {
 		msg := "auth incorrect"
 		api.reportError(c, errors.New(msg), http.StatusUnauthorized, msg)

@@ -18,14 +18,20 @@ var (
 )
 
 type UserAPI struct {
-	logger      zerolog.Logger
-	userService ports.UserService
+	logger       zerolog.Logger
+	userService  ports.UserService
+	orderService ports.OrderService
 }
 
-func New(logService *logging.LoggerService, userService ports.UserService) *UserAPI {
+func New(
+	logService *logging.LoggerService,
+	userService ports.UserService,
+	orderService ports.OrderService,
+) *UserAPI {
 	return &UserAPI{
-		logger:      logService.ComponentLogger("UserAPI"),
-		userService: userService,
+		logger:       logService.ComponentLogger("UserAPI"),
+		userService:  userService,
+		orderService: orderService,
 	}
 }
 
@@ -35,12 +41,12 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup.POST("/register", api.registerUserHandler)
 	userGroup.POST("/login", api.loginUserHandler)
 
-	userGroup.POST("/orders", api.authMiddleware, api.registerOrder)
+	// userGroup.POST("/orders", api.AuthMiddleware, api.registerOrder)
 }
 
 type userBody struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login    string `json:"login" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
 func (api *UserAPI) registerUserHandler(c *gin.Context) {
@@ -59,7 +65,7 @@ func (api *UserAPI) registerUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
+	c.Header(AuthorizationHeaderName, fmt.Sprintf("Bearer %s", token))
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
@@ -79,13 +85,26 @@ func (api *UserAPI) loginUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.Header("Authorization", fmt.Sprintf("Bearer %s", token))
+	c.Header(AuthorizationHeaderName, fmt.Sprintf("Bearer %s", token))
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-func (api *UserAPI) registerOrder(c *gin.Context) {
-	_ = c.MustGet(UserKey)
-}
+//func (api *UserAPI) registerOrder(c *gin.Context) {
+//	_ = c.MustGet(UserKey)
+//
+//	body, err := c.GetRawData()
+//	if err != nil {
+//		api.reportError(c, err, http.StatusBadRequest, "order should be a number")
+//		return
+//	}
+//
+//	err := api.orderService.AddOrder(c, string(body))
+//	switch {
+//	case errors.Is(err, apperrors.ErrOrderWasPostedByThisUser):
+//		c.JSON(http.StatusOK, gin.H{"success": "order with such number was already posted by this user"})
+//	}
+//
+//}
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
 	api.logger.Error().Err(err).Msg(msg)
