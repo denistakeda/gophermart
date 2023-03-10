@@ -328,6 +328,74 @@ func TestAuthMiddleware(t *testing.T) {
 	}
 }
 
+func TestRegisterOrderHandler(t *testing.T) {
+	orderNum := "1234 5678 1234 5678"
+
+	tests := []struct {
+		name                string
+		user                domain.User
+		requestBody         string
+		addOrderErrorReturn error
+
+		wantStatus int
+	}{
+		{
+			name:                "already aploaded order",
+			user:                domain.User{},
+			requestBody:         orderNum,
+			addOrderErrorReturn: apperrors.ErrOrderWasPostedByThisUser,
+			wantStatus:          http.StatusOK,
+		},
+		{
+			name:                "order was posted by another user",
+			user:                domain.User{},
+			requestBody:         orderNum,
+			addOrderErrorReturn: apperrors.ErrOrderWasPostedByAnotherUser,
+			wantStatus:          http.StatusConflict,
+		},
+		{
+			name:                "incorrect order format",
+			user:                domain.User{},
+			requestBody:         orderNum,
+			addOrderErrorReturn: apperrors.ErrIncorrectOrderFormat,
+			wantStatus:          http.StatusUnprocessableEntity,
+		},
+		{
+			name:                "internal server error",
+			user:                domain.User{},
+			requestBody:         orderNum,
+			addOrderErrorReturn: errors.New("unknown error"),
+			wantStatus:          http.StatusInternalServerError,
+		},
+		{
+			name:                "success case",
+			user:                domain.User{},
+			requestBody:         orderNum,
+			addOrderErrorReturn: nil,
+			wantStatus:          http.StatusAccepted,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			apiTest := NewApiTest(t).AuthenticateWithUser(tt.user)
+
+			apiTest.OrderService.EXPECT().
+				AddOrder(gomock.Any(), &tt.user, tt.requestBody).
+				Return(tt.addOrderErrorReturn).
+				Times(1)
+
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest("POST", "/api/user/orders", bytes.NewReader([]byte(tt.requestBody)))
+
+			req.Header.Set("Authorization", "Bearer authtoken")
+
+			apiTest.Router.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.wantStatus, w.Code)
+		})
+	}
+}
+
 // -- Test helpers --
 
 type ApiTest struct {
@@ -355,6 +423,15 @@ func NewApiTest(t *testing.T) *ApiTest {
 		UserAPI:      userAPI,
 		LogService:   logService,
 	}
+}
+
+func (apiTest *ApiTest) AuthenticateWithUser(user domain.User) *ApiTest {
+	apiTest.UserService.EXPECT().
+		AuthenticateUser(gomock.Any(), gomock.Any()).
+		Return(user, nil).
+		Times(1)
+
+	return apiTest
 }
 
 func makeUserBody(t *testing.T, login, password string) []byte {

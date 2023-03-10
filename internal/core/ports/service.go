@@ -12,5 +12,5 @@ type UserService interface {
 }
 
 type OrderService interface {
-	AddOrder(ctx context.Context, orderNumber string) error
+	AddOrder(ctx context.Context, user *domain.User, orderNumber string) error
 }

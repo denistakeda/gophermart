@@ -2,6 +2,7 @@ package userapi
 
 import (
 	"gophermart/internal/core/apperrors"
+	"gophermart/internal/core/domain"
 	"net/http"
 	"strings"
 
@@ -38,4 +39,9 @@ func (api *UserAPI) AuthMiddleware(c *gin.Context) {
 	c.Set(UserKey, user)
 
 	c.Next()
+}
+
+func (api *UserAPI) GetUser(c *gin.Context) domain.User {
+	user := c.MustGet(UserKey)
+	return user.(domain.User)
 }

@@ -41,7 +41,7 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup.POST("/register", api.registerUserHandler)
 	userGroup.POST("/login", api.loginUserHandler)
 
-	// userGroup.POST("/orders", api.AuthMiddleware, api.registerOrder)
+	userGroup.POST("/orders", api.AuthMiddleware, api.registerOrderHandler)
 }
 
 type userBody struct {
@@ -89,22 +89,30 @@ func (api *UserAPI) loginUserHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
-//func (api *UserAPI) registerOrder(c *gin.Context) {
-//	_ = c.MustGet(UserKey)
-//
-//	body, err := c.GetRawData()
-//	if err != nil {
-//		api.reportError(c, err, http.StatusBadRequest, "order should be a number")
-//		return
-//	}
-//
-//	err := api.orderService.AddOrder(c, string(body))
-//	switch {
-//	case errors.Is(err, apperrors.ErrOrderWasPostedByThisUser):
-//		c.JSON(http.StatusOK, gin.H{"success": "order with such number was already posted by this user"})
-//	}
-//
-//}
+func (api *UserAPI) registerOrderHandler(c *gin.Context) {
+	user := api.GetUser(c)
+
+	body, err := c.GetRawData()
+	if err != nil {
+		api.reportError(c, err, http.StatusBadRequest, "order should be a number")
+		return
+	}
+
+	err = api.orderService.AddOrder(c, &user, string(body))
+	switch {
+	case errors.Is(err, apperrors.ErrOrderWasPostedByThisUser):
+		c.JSON(http.StatusOK, gin.H{"success": "order with such number was already posted by this user"})
+	case errors.Is(err, apperrors.ErrOrderWasPostedByAnotherUser):
+		api.reportError(c, err, http.StatusConflict, "order with such number was already posted by another user")
+	case errors.Is(err, apperrors.ErrIncorrectOrderFormat):
+		api.reportError(c, err, http.StatusUnprocessableEntity, "incorrect order format")
+	case err != nil:
+		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+	default:
+		c.JSON(http.StatusAccepted, gin.H{"success": "order was successfully created"})
+	}
+
+}
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
 	api.logger.Error().Err(err).Msg(msg)
