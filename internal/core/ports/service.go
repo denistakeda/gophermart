@@ -13,4 +13,5 @@ type UserService interface {
 
 type OrderService interface {
 	AddOrder(ctx context.Context, user *domain.User, orderNumber string) error
+	GetAllOrders(ctx context.Context, user *domain.User) ([]domain.Order, error)
 }

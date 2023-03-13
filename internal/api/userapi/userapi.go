@@ -42,6 +42,7 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup.POST("/login", api.loginUserHandler)
 
 	userGroup.POST("/orders", api.AuthMiddleware, api.registerOrderHandler)
+	userGroup.GET("/orders", api.AuthMiddleware, api.getOrdersHandler)
 }
 
 type userBody struct {
@@ -112,6 +113,23 @@ func (api *UserAPI) registerOrderHandler(c *gin.Context) {
 		c.JSON(http.StatusAccepted, gin.H{"success": "order was successfully created"})
 	}
 
+}
+
+func (api *UserAPI) getOrdersHandler(c *gin.Context) {
+	user := api.GetUser(c)
+
+	orders, err := api.orderService.GetAllOrders(c, &user)
+	if err != nil {
+		api.reportError(c, err, http.StatusInternalServerError, "failed to fetch list of orders for a user")
+		return
+	}
+
+	if len(orders) == 0 {
+		c.AbortWithStatus(http.StatusNoContent)
+		return
+	}
+
+	c.JSON(http.StatusOK, orders)
 }
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
