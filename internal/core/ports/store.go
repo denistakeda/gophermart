@@ -9,3 +9,8 @@ type UserStore interface {
 	AddNewUser(ctx context.Context, login, passwordHash string) error
 	GetUser(ctx context.Context, login string) (domain.User, error)
 }
+
+type OrderStore interface {
+	GetOrder(ctx context.Context, orderNumber int) (domain.Order, error)
+	AddNewOrder(ctx context.Context, userID int, orderNumber int) error
+}

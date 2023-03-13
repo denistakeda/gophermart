@@ -12,4 +12,5 @@ var (
 	ErrOrderWasPostedByThisUser    = errors.New("the order with such number was already posted by this user")
 	ErrOrderWasPostedByAnotherUser = errors.New("the order with such number was already posted by another user")
 	ErrIncorrectOrderFormat        = errors.New("incorrect order format")
+	ErrNoSuchOrder                 = errors.New("no such order in the database")
 )

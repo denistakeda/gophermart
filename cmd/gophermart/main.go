@@ -6,8 +6,10 @@ import (
 	"gophermart/internal/core/services/config"
 	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
+	"gophermart/internal/core/services/orderservice"
 	"gophermart/internal/core/services/server"
 	"gophermart/internal/core/services/userservice"
+	"gophermart/internal/core/stores/orderstore"
 	"gophermart/internal/core/stores/userstore"
 	"os"
 	"os/signal"
@@ -36,13 +38,15 @@ func main() {
 
 	// Stores
 	userStore := userstore.New(db)
+	orderStore := orderstore.New(db)
 
 	// Services
 	srv := server.NewServer(":8080", engine, logService)
 	userService := userservice.New(conf.Secret, logService, userStore)
+	orderService := orderservice.New(logService, orderStore)
 
 	// APIs
-	userAPI := userapi.New(logService, userService)
+	userAPI := userapi.New(logService, userService, orderService)
 	userAPI.Register(engine)
 
 	// Start
