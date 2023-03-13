@@ -31,11 +31,23 @@ func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber in
 func (o *OrderStore) GetOrder(ctx context.Context, orderNumber int) (domain.Order, error) {
 	var order domain.Order
 	if err := o.db.GetContext(ctx, &order, `
-		select * from users
+		select * from orders
 		where order_number=$1
 	`, orderNumber); err != nil {
 		return domain.Order{}, errors.Wrapf(err, "failed to get order %d from the database", orderNumber)
 	}
 
 	return order, nil
+}
+
+func (o *OrderStore) GetAllOrders(ctx context.Context, userID int) ([]domain.Order, error) {
+	var orders []domain.Order
+	if err := o.db.SelectContext(ctx, &orders, `
+		select * from orders
+		where user_id=$1
+	`, userID); err != nil {
+		return orders, errors.Wrapf(err, "failed to get list of orders for user with id %d", userID)
+	}
+
+	return orders, nil
 }
