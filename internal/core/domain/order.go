@@ -12,10 +12,11 @@ const (
 )
 
 type Order struct {
-	ID          int         `db:"id"`
-	UserID      int         `db:"user_id"`
-	OrderNumber int         `db:"order_number"`
-	Status      OrderStatus `db:"status"`
-	CreatedAt   time.Time   `db:"created_at"`
-	UpdatedAt   time.Time   `db:"updated_at"`
+	ID          int         `db:"id" json:"-"`
+	UserID      int         `db:"user_id" json:"-"`
+	OrderNumber int         `db:"order_number" json:"number"`
+	Status      OrderStatus `db:"status" json:"status"`
+	Accrual     int         `db:"accrual" json:"accrual,omitempty"`
+	CreatedAt   time.Time   `db:"created_at" json:"uploaded_at"`
+	UpdatedAt   time.Time   `db:"updated_at" json:"-"`
 }
