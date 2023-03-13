@@ -34,7 +34,7 @@ func (u *UserStore) GetUser(ctx context.Context, login string) (domain.User, err
 		select login, password from users
 		where login=$1
 	`, login); err != nil {
-		return user, errors.Wrap(err, "failed to get user from database")
+		return user, errors.Wrapf(err, "failed to get user %s from the database", login)
 	}
 
 	return user, nil
