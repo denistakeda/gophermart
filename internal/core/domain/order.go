@@ -2,10 +2,13 @@ package domain
 
 import "time"
 
-type OrderStatus int
+type OrderStatus string
 
 const (
-	OrderStatus_New = iota
+	OrderStatus_New        OrderStatus = "NEW"
+	OrderStatus_Processing OrderStatus = "PROCESSING"
+	OrderStatus_Invalid    OrderStatus = "INVALID"
+	OrderStatus_Processed  OrderStatus = "PROCESSED"
 )
 
 type Order struct {
