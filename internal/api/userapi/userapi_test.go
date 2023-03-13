@@ -86,7 +86,7 @@ func TestRegisterNewUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apiTest := NewApiTest(t)
+			apiTest := NewAPITest(t)
 
 			if tt.serviceCall != nil {
 				apiTest.UserService.EXPECT().
@@ -184,7 +184,7 @@ func TestLoginUser(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apiTest := NewApiTest(t)
+			apiTest := NewAPITest(t)
 
 			if tt.serviceCall != nil {
 				apiTest.UserService.EXPECT().
@@ -298,7 +298,7 @@ func TestAuthMiddleware(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apiTest := NewApiTest(t)
+			apiTest := NewAPITest(t)
 			apiTest.Router.GET("/authmiddleware", apiTest.UserAPI.AuthMiddleware, func(c *gin.Context) {
 				val, exists := c.Get(UserKey)
 				assert.True(t, exists, "middleware should assign a user")
@@ -377,7 +377,7 @@ func TestRegisterOrderHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			apiTest := NewApiTest(t).AuthenticateWithUser(tt.user)
+			apiTest := NewAPITest(t).AuthenticateWithUser(tt.user)
 
 			apiTest.OrderService.EXPECT().
 				AddOrder(gomock.Any(), &tt.user, tt.requestBody).
@@ -398,7 +398,7 @@ func TestRegisterOrderHandler(t *testing.T) {
 
 // -- Test helpers --
 
-type ApiTest struct {
+type APITest struct {
 	Router       *gin.Engine
 	UserService  *mocks.MockUserService
 	OrderService *mocks.MockOrderService
@@ -406,7 +406,7 @@ type ApiTest struct {
 	LogService   *logging.LoggerService
 }
 
-func NewApiTest(t *testing.T) *ApiTest {
+func NewAPITest(t *testing.T) *APITest {
 	ctrl := gomock.NewController(t)
 	userService := mocks.NewMockUserService(ctrl)
 	router := gin.New()
@@ -416,7 +416,7 @@ func NewApiTest(t *testing.T) *ApiTest {
 
 	userAPI.Register(router)
 
-	return &ApiTest{
+	return &APITest{
 		Router:       router,
 		UserService:  userService,
 		OrderService: orderService,
@@ -425,7 +425,7 @@ func NewApiTest(t *testing.T) *ApiTest {
 	}
 }
 
-func (apiTest *ApiTest) AuthenticateWithUser(user domain.User) *ApiTest {
+func (apiTest *APITest) AuthenticateWithUser(user domain.User) *APITest {
 	apiTest.UserService.EXPECT().
 		AuthenticateUser(gomock.Any(), gomock.Any()).
 		Return(user, nil).
