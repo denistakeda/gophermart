@@ -29,7 +29,7 @@ func main() {
 		mainLogger.Fatal().Err(err).Msg("failed to read configuration")
 	}
 
-	db, err := db.NewDB(conf.DatabaseDSN)
+	db, err := db.NewDB(conf.DatabaseURI)
 	if err != nil {
 		mainLogger.Fatal().Err(err).Msg("failed to initiate database")
 	}
