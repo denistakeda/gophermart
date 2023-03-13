@@ -55,3 +55,12 @@ func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNum
 
 	return o.orderStore.AddNewOrder(ctx, user.ID, intOrder)
 }
+
+func (o *OrderService) GetAllOrders(ctx context.Context, user *domain.User) ([]domain.Order, error) {
+	orders, err := o.orderStore.GetAllOrders(ctx, user.ID)
+	if err != nil {
+		return []domain.Order{}, errors.Wrapf(err, "failed to get all orders for the user %s", user.Login)
+	}
+
+	return orders, nil
+}
