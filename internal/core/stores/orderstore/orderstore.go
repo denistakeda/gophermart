@@ -21,7 +21,7 @@ func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber in
 	if _, err := o.db.ExecContext(ctx, `
 		insert into orders(user_id, order_number, status, created_at, updated_at)
 		values ($1, $2, $3, $4, $5)
-	`, userID, orderNumber, domain.OrderStatus_New, time.Now(), time.Now()); err != nil {
+	`, userID, orderNumber, domain.OrderStatusNew, time.Now(), time.Now()); err != nil {
 		return errors.Wrapf(err, "failed to insert order %d into a database", orderNumber)
 	}
 
@@ -57,7 +57,7 @@ func (o *OrderStore) GetAllNotFinished(ctx context.Context) ([]domain.Order, err
 	if err := o.db.SelectContext(ctx, &orders, `
 		select * from orders
 		where status=$1 or status=$2
-	`, domain.OrderStatus_New, domain.OrderStatus_Processing); err != nil {
+	`, domain.OrderStatusNew, domain.OrderStatusProcessing); err != nil {
 		return orders, errors.Wrapf(err, "failed to get list of not finished orders")
 	}
 
