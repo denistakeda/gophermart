@@ -51,3 +51,52 @@ func (o *OrderStore) GetAllOrders(ctx context.Context, userID int) ([]domain.Ord
 
 	return orders, nil
 }
+
+func (o *OrderStore) GetAllNotFinished(ctx context.Context) ([]domain.Order, error) {
+	var orders []domain.Order
+	if err := o.db.SelectContext(ctx, &orders, `
+		select * from orders
+		where status=$1 or status=$2
+	`, domain.OrderStatus_New, domain.OrderStatus_Processing); err != nil {
+		return orders, errors.Wrapf(err, "failed to get list of not finished orders")
+	}
+
+	return orders, nil
+}
+func (o *OrderStore) UpdateOrders(ctx context.Context, orders []domain.Order) error {
+	if len(orders) == 0 {
+		return nil
+	}
+
+	tx, err := o.db.BeginTx(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to start transaction")
+	}
+
+	stmt, err := tx.Prepare(`
+		update orders
+		set status=$1, accrual=$2
+		where order_number=$1
+	`)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to prepare the update query")
+	}
+
+	defer stmt.Close()
+
+	for _, order := range orders {
+		if _, err := stmt.Exec(order.Status, order.Accrual, order.OrderNumber); err != nil {
+			if err := tx.Rollback(); err != nil {
+				return errors.Wrap(err, "unable to rollback")
+			}
+			return errors.Wrapf(err, "failed to exec query with order %v", order)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return errors.Wrap(err, "unable to commit")
+	}
+
+	return nil
+}

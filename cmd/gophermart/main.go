@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"gophermart/internal/api/userapi"
+	"gophermart/internal/core/services/accrualservice"
 	"gophermart/internal/core/services/config"
 	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
@@ -44,6 +45,7 @@ func main() {
 	srv := server.NewServer(":8080", engine, logService)
 	userService := userservice.New(conf.Secret, logService, userStore)
 	orderService := orderservice.New(logService, orderStore)
+	accrualService := accrualservice.New(conf.AccrualSystemAddress, orderStore, logService)
 
 	// APIs
 	userAPI := userapi.New(logService, userService, orderService)
@@ -51,10 +53,12 @@ func main() {
 
 	// Start
 	srv.Start()
+	defer srv.Stop(context.Background())
+
+	accrualService.Run()
+	defer accrualService.Stop()
 
 	waitSigterm(mainLogger)
-
-	srv.Stop(context.Background())
 }
 
 func createEngine() *gin.Engine {

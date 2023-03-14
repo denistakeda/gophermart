@@ -14,4 +14,6 @@ type OrderStore interface {
 	GetOrder(ctx context.Context, orderNumber int) (domain.Order, error)
 	AddNewOrder(ctx context.Context, userID int, orderNumber int) error
 	GetAllOrders(ctx context.Context, userID int) ([]domain.Order, error)
+	GetAllNotFinished(ctx context.Context) ([]domain.Order, error)
+	UpdateOrders(ctx context.Context, orders []domain.Order) error
 }

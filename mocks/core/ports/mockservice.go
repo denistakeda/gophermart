@@ -116,3 +116,18 @@ func (mr *MockOrderServiceMockRecorder) AddOrder(arg0, arg1, arg2 interface{}) *
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddOrder", reflect.TypeOf((*MockOrderService)(nil).AddOrder), arg0, arg1, arg2)
 }
+
+// GetAllOrders mocks base method.
+func (m *MockOrderService) GetAllOrders(arg0 context.Context, arg1 *domain.User) ([]domain.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllOrders", arg0, arg1)
+	ret0, _ := ret[0].([]domain.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllOrders indicates an expected call of GetAllOrders.
+func (mr *MockOrderServiceMockRecorder) GetAllOrders(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOrders", reflect.TypeOf((*MockOrderService)(nil).GetAllOrders), arg0, arg1)
+}
