@@ -30,6 +30,10 @@ func New(
 }
 
 func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNumber string) error {
+	if !luhnValid(orderNumber) {
+		return errors.Wrapf(apperrors.ErrIncorrectOrderFormat, "incorrect order number '%s'", orderNumber)
+	}
+
 	order, err := o.orderStore.GetOrder(ctx, orderNumber)
 	if err != nil && !errors.Is(err, apperrors.ErrNoSuchOrder) {
 		return errors.Wrap(err, "failed to create an order")
