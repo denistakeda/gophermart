@@ -31,7 +31,7 @@ func New(
 
 func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNumber string) error {
 	if !luhnValid(orderNumber) {
-		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, "incorrect order number")
+		return errors.Wrapf(apperrors.ErrIncorrectOrderFormat, "incorrect order number '%s'", orderNumber)
 	}
 
 	order, err := o.orderStore.GetOrder(ctx, orderNumber)
@@ -98,7 +98,7 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 
 func (o *OrderService) Withdraw(ctx context.Context, orderNumber string, sum float64, user *domain.User) error {
 	if !luhnValid(orderNumber) {
-		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, "incorrect order number")
+		return errors.Wrapf(apperrors.ErrIncorrectOrderFormat, "incorrect order number '%s'", orderNumber)
 	}
 
 	balance, err := o.GetUserBalance(ctx, user)
