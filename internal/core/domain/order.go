@@ -14,7 +14,7 @@ const (
 type Order struct {
 	ID          int         `db:"id" json:"-"`
 	UserID      int         `db:"user_id" json:"-"`
-	OrderNumber int         `db:"order_number" json:"number"`
+	OrderNumber string      `db:"order_number" json:"number"`
 	Status      OrderStatus `db:"status" json:"status"`
 	Accrual     float64     `db:"accrual" json:"accrual,omitempty"`
 	CreatedAt   time.Time   `db:"created_at" json:"uploaded_at"`

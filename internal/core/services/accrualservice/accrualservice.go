@@ -89,9 +89,9 @@ func (a *AccrualService) checkOrders() {
 }
 
 func (a *AccrualService) checkAccrual(order domain.Order) (AccrualResponse, error) {
-	resp, err := http.Get(fmt.Sprintf("%s/api/orders/%d", a.accrualSystemAddress, order.OrderNumber))
+	resp, err := http.Get(fmt.Sprintf("%s/api/orders/%s", a.accrualSystemAddress, order.OrderNumber))
 	if err != nil {
-		return AccrualResponse{}, errors.Wrapf(err, "failed to get order '%d' from accrual system", order.OrderNumber)
+		return AccrualResponse{}, errors.Wrapf(err, "failed to get order '%s' from accrual system", order.OrderNumber)
 	}
 
 	defer func() {
@@ -102,7 +102,7 @@ func (a *AccrualService) checkAccrual(order domain.Order) (AccrualResponse, erro
 
 	var accrualResponse AccrualResponse
 	if err := json.NewDecoder(resp.Body).Decode(&accrualResponse); err != nil {
-		return AccrualResponse{}, errors.Wrapf(err, "failed to decode body for order '%d'", order.OrderNumber)
+		return AccrualResponse{}, errors.Wrapf(err, "failed to decode body for order '%s'", order.OrderNumber)
 	}
 
 	return accrualResponse, nil

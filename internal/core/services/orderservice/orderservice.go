@@ -40,7 +40,7 @@ func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNum
 		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, "incorrect order number")
 	}
 
-	order, err := o.orderStore.GetOrder(ctx, intOrder)
+	order, err := o.orderStore.GetOrder(ctx, orderNumber)
 	if err != nil && !errors.Is(err, apperrors.ErrNoSuchOrder) {
 		return errors.Wrap(err, "failed to create an order")
 	}
@@ -59,7 +59,7 @@ func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNum
 		}
 	}
 
-	return o.orderStore.AddNewOrder(ctx, user.ID, intOrder)
+	return o.orderStore.AddNewOrder(ctx, user.ID, orderNumber)
 }
 
 func (o *OrderService) GetAllOrders(ctx context.Context, user *domain.User) ([]domain.Order, error) {

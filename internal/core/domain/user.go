@@ -1,7 +1,10 @@
 package domain
 
+import "time"
+
 type User struct {
-	ID       int
-	Login    string
-	Password string // hashed Password
+	ID        int       `db:"id"`
+	Login     string    `db:"login"`
+	Password  string    `db:"password"` // hashed Password
+	CreatedAt time.Time `db:"created_at"`
 }

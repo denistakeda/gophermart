@@ -19,18 +19,18 @@ func New(db *sqlx.DB) *OrderStore {
 	return &OrderStore{db: db}
 }
 
-func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber int) error {
+func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber string) error {
 	if _, err := o.db.ExecContext(ctx, `
-		insert into orders(user_id, order_number, status, created_at, updated_at)
-		values ($1, $2, $3, $4, $5)
-	`, userID, orderNumber, domain.OrderStatusNew, time.Now(), time.Now()); err != nil {
-		return errors.Wrapf(err, "failed to insert order %d into a database", orderNumber)
+		insert into orders(user_id, order_number, status, accrual, created_at, updated_at)
+		values ($1, $2, $3, $4, $5, $6)
+	`, userID, orderNumber, domain.OrderStatusNew, 0, time.Now(), time.Now()); err != nil {
+		return errors.Wrapf(err, "failed to insert order %s into a database, userID: %d", orderNumber, userID)
 	}
 
 	return nil
 }
 
-func (o *OrderStore) GetOrder(ctx context.Context, orderNumber int) (domain.Order, error) {
+func (o *OrderStore) GetOrder(ctx context.Context, orderNumber string) (domain.Order, error) {
 	var order domain.Order
 	err := o.db.GetContext(ctx, &order, `
 		select * from orders
@@ -41,7 +41,7 @@ func (o *OrderStore) GetOrder(ctx context.Context, orderNumber int) (domain.Orde
 	case errors.Is(err, sql.ErrNoRows):
 		return order, apperrors.ErrNoSuchOrder
 	case err != nil:
-		return domain.Order{}, errors.Wrapf(err, "failed to get order %d from the database", orderNumber)
+		return domain.Order{}, errors.Wrapf(err, "failed to get order %s from the database", orderNumber)
 	default:
 		return order, nil
 	}
@@ -83,7 +83,7 @@ func (o *OrderStore) UpdateOrders(ctx context.Context, orders []domain.Order) er
 	stmt, err := tx.Prepare(`
 		update orders
 		set status=$1, accrual=$2
-		where order_number=$1
+		where order_number=$3
 	`)
 
 	if err != nil {
