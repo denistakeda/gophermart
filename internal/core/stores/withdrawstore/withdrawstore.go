@@ -3,6 +3,7 @@ package withdrawstore
 import (
 	"context"
 	"gophermart/internal/core/domain"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -26,4 +27,15 @@ func (w *WithdrawStore) GetAllWithdrawals(ctx context.Context, userID int) ([]do
 	}
 
 	return withdrawals, nil
+}
+
+func (w *WithdrawStore) AddNewWithdrawn(ctx context.Context, orderNumber string, sum float64, userID int) error {
+	if _, err := w.db.ExecContext(ctx, `
+		insert into withdrawals("order", sum, user_id, processed_at)
+		values ($1, $2, $3, $4)
+	`, orderNumber, sum, userID, time.Now()); err != nil {
+		return errors.Wrapf(err, "failed to insert withdrawn for order '%s' into a database", orderNumber)
+	}
+
+	return nil
 }
