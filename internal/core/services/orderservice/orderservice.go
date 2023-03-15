@@ -13,14 +13,20 @@ import (
 )
 
 type OrderService struct {
-	logger     zerolog.Logger
-	orderStore ports.OrderStore
+	logger         zerolog.Logger
+	orderStore     ports.OrderStore
+	withdrawnStore ports.WithdrawnStore
 }
 
-func New(logService *logging.LoggerService, orderStore ports.OrderStore) *OrderService {
+func New(
+	logService *logging.LoggerService,
+	orderStore ports.OrderStore,
+	withdrawnStore ports.WithdrawnStore,
+) *OrderService {
 	return &OrderService{
-		logger:     logService.ComponentLogger("OrderService"),
-		orderStore: orderStore,
+		logger:         logService.ComponentLogger("OrderService"),
+		orderStore:     orderStore,
+		withdrawnStore: withdrawnStore,
 	}
 }
 
@@ -63,4 +69,35 @@ func (o *OrderService) GetAllOrders(ctx context.Context, user *domain.User) ([]d
 	}
 
 	return orders, nil
+}
+
+func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (domain.UserBalance, error) {
+	var balance domain.UserBalance
+
+	orders, err := o.GetAllOrders(ctx, user)
+	if err != nil {
+		return balance, err
+	}
+
+	withdrawns, err := o.withdrawnStore.GetAllWithdrawns(ctx, user.ID)
+	if err != nil {
+		return balance, errors.Wrapf(err, "failed to get all withdrawns for the user %s", user.Login)
+	}
+
+	var total float64
+	for _, order := range orders {
+		if order.Status == domain.OrderStatusProcessed {
+			total += order.Accrual
+		}
+	}
+
+	var spent float64
+	for _, withdrawn := range withdrawns {
+		spent += withdrawn.Sum
+	}
+
+	balance.Current = total - spent
+	balance.Withdrawn = spent
+
+	return balance, nil
 }

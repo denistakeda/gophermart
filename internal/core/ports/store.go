@@ -17,3 +17,7 @@ type OrderStore interface {
 	GetAllNotFinished(ctx context.Context) ([]domain.Order, error)
 	UpdateOrders(ctx context.Context, orders []domain.Order) error
 }
+
+type WithdrawnStore interface {
+	GetAllWithdrawns(ctx context.Context, userID int) ([]domain.Withdrawn, error)
+}
