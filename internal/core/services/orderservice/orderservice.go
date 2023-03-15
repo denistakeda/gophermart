@@ -112,3 +112,12 @@ func (o *OrderService) Withdraw(ctx context.Context, orderNumber string, sum flo
 
 	return nil
 }
+
+func (o *OrderService) GetAllWithdrawals(ctx context.Context, user *domain.User) ([]domain.Withdrawn, error) {
+	withdrawals, err := o.withdrawnStore.GetAllWithdrawals(ctx, user.ID)
+	if err != nil {
+		return withdrawals, errors.Wrap(err, "failed to get the list of withdrawals")
+	}
+
+	return withdrawals, nil
+}
