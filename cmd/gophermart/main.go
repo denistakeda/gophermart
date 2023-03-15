@@ -12,6 +12,7 @@ import (
 	"gophermart/internal/core/services/userservice"
 	"gophermart/internal/core/stores/orderstore"
 	"gophermart/internal/core/stores/userstore"
+	"gophermart/internal/core/stores/withdrawstore"
 	"os"
 	"os/signal"
 	"syscall"
@@ -40,11 +41,12 @@ func main() {
 	// Stores
 	userStore := userstore.New(db)
 	orderStore := orderstore.New(db)
+	withdrawStore := withdrawstore.New(db)
 
 	// Services
 	srv := server.NewServer(":8080", engine, logService)
 	userService := userservice.New(conf.Secret, logService, userStore)
-	orderService := orderservice.New(logService, orderStore)
+	orderService := orderservice.New(logService, orderStore, withdrawStore)
 	accrualService := accrualservice.New(conf.AccrualSystemAddress, orderStore, logService)
 
 	// APIs
