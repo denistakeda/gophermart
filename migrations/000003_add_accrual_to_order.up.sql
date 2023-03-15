@@ -1,2 +1,2 @@
 alter table orders
-add column accrual int;
+add column accrual numeric;
