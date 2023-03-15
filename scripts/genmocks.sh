@@ -4,4 +4,4 @@ mockgen -destination=mocks/core/ports/mockservice.go -package=ports gophermart/i
     UserService,OrderService
 
 mockgen -destination=mocks/core/ports/mockstore.go   -package=ports gophermart/internal/core/ports \
-    UserStore
+    UserStore,OrderStore,WithdrawnStore
