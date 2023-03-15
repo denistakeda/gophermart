@@ -6,7 +6,6 @@ import (
 	"gophermart/internal/core/domain"
 	"gophermart/internal/core/ports"
 	"gophermart/internal/core/services/logging"
-	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -31,12 +30,7 @@ func New(
 }
 
 func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNumber string) error {
-	intOrder, err := strconv.Atoi(orderNumber)
-	if err != nil {
-		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, err.Error())
-	}
-
-	if !luhnValid(intOrder) {
+	if !luhnValid(orderNumber) {
 		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, "incorrect order number")
 	}
 
@@ -100,4 +94,25 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 	balance.Withdrawn = spent
 
 	return balance, nil
+}
+
+func (o *OrderService) Withdraw(ctx context.Context, orderNumber string, sum float64, user *domain.User) error {
+	if !luhnValid(orderNumber) {
+		return errors.Wrap(apperrors.ErrIncorrectOrderFormat, "incorrect order number")
+	}
+
+	balance, err := o.GetUserBalance(ctx, user)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get balance for user %s", user.Login)
+	}
+
+	if balance.Current < sum {
+		return errors.Wrapf(apperrors.ErrNotEnoughMoney, "user %s does not have enough money", user.Login)
+	}
+
+	if err = o.withdrawnStore.AddNewWithdrawn(ctx, orderNumber, sum, user.ID); err != nil {
+		return errors.Wrapf(err, "failed to create a withdrawn for user %s", user.Login)
+	}
+
+	return nil
 }

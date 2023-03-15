@@ -1,8 +1,16 @@
 package orderservice
 
+import (
+	"strconv"
+)
+
 // Valid check number is valid or not based on Luhn algorithm
-func luhnValid(number int) bool {
-	return (number%10+checksum(number/10))%10 == 0
+func luhnValid(number string) bool {
+	intNumber, err := strconv.Atoi(number)
+	if err != nil {
+		return false
+	}
+	return (intNumber%10+checksum(intNumber/10))%10 == 0
 }
 
 func checksum(number int) int {

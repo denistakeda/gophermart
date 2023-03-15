@@ -161,7 +161,7 @@ func (api *UserAPI) withdrawHandler(c *gin.Context) {
 		return
 	}
 
-	err := api.orderService.Withdraw(c, request.Order, request.Sum, user.ID)
+	err := api.orderService.Withdraw(c, request.Order, request.Sum, &user)
 	switch {
 	case errors.Is(err, apperrors.ErrNotEnoughMoney):
 		api.reportError(c, err, http.StatusPaymentRequired, "not enough money")
