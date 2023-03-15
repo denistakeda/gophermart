@@ -79,9 +79,9 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 		return balance, err
 	}
 
-	withdrawns, err := o.withdrawnStore.GetAllWithdrawns(ctx, user.ID)
+	withdrawals, err := o.withdrawnStore.GetAllWithdrawals(ctx, user.ID)
 	if err != nil {
-		return balance, errors.Wrapf(err, "failed to get all withdrawns for the user %s", user.Login)
+		return balance, errors.Wrapf(err, "failed to get all withdrawals for the user %s", user.Login)
 	}
 
 	var total float64
@@ -92,7 +92,7 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 	}
 
 	var spent float64
-	for _, withdrawn := range withdrawns {
+	for _, withdrawn := range withdrawals {
 		spent += withdrawn.Sum
 	}
 
