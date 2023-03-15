@@ -47,6 +47,8 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	balanceGroup := userGroup.Group("/balance")
 	balanceGroup.GET("/", api.AuthMiddleware, api.balanceHandler)
 	balanceGroup.POST("/withdraw", api.AuthMiddleware, api.withdrawHandler)
+
+	userGroup.GET("/withdrawals", api.AuthMiddleware, api.withdrawalsHandler)
 }
 
 type userBody struct {
@@ -172,6 +174,23 @@ func (api *UserAPI) withdrawHandler(c *gin.Context) {
 	default:
 		c.JSON(http.StatusOK, gin.H{"success": "OK"})
 	}
+}
+
+func (api *UserAPI) withdrawalsHandler(c *gin.Context) {
+	user := api.GetUser(c)
+
+	withdrawals, err := api.orderService.GetAllWithdrawals(c, &user)
+	if err != nil {
+		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	if len(withdrawals) == 0 {
+		c.AbortWithStatus(http.StatusNoContent)
+		return
+	}
+
+	c.JSON(http.StatusOK, withdrawals)
 }
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
