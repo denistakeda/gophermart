@@ -88,7 +88,7 @@ func (m *MockOrderStore) EXPECT() *MockOrderStoreMockRecorder {
 }
 
 // AddNewOrder mocks base method.
-func (m *MockOrderStore) AddNewOrder(arg0 context.Context, arg1, arg2 int) error {
+func (m *MockOrderStore) AddNewOrder(arg0 context.Context, arg1 int, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddNewOrder", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -132,7 +132,7 @@ func (mr *MockOrderStoreMockRecorder) GetAllOrders(arg0, arg1 interface{}) *gomo
 }
 
 // GetOrder mocks base method.
-func (m *MockOrderStore) GetOrder(arg0 context.Context, arg1 int) (domain.Order, error) {
+func (m *MockOrderStore) GetOrder(arg0 context.Context, arg1 string) (domain.Order, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetOrder", arg0, arg1)
 	ret0, _ := ret[0].(domain.Order)
@@ -181,6 +181,20 @@ func NewMockWithdrawnStore(ctrl *gomock.Controller) *MockWithdrawnStore {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockWithdrawnStore) EXPECT() *MockWithdrawnStoreMockRecorder {
 	return m.recorder
+}
+
+// AddNewWithdrawn mocks base method.
+func (m *MockWithdrawnStore) AddNewWithdrawn(arg0 context.Context, arg1 string, arg2 float64, arg3 int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddNewWithdrawn", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddNewWithdrawn indicates an expected call of AddNewWithdrawn.
+func (mr *MockWithdrawnStoreMockRecorder) AddNewWithdrawn(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddNewWithdrawn", reflect.TypeOf((*MockWithdrawnStore)(nil).AddNewWithdrawn), arg0, arg1, arg2, arg3)
 }
 
 // GetAllWithdrawals mocks base method.
