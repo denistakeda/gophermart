@@ -2,6 +2,8 @@ package orderstore
 
 import (
 	"context"
+	"database/sql"
+	"gophermart/internal/core/apperrors"
 	"gophermart/internal/core/domain"
 	"time"
 
@@ -30,14 +32,19 @@ func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber in
 
 func (o *OrderStore) GetOrder(ctx context.Context, orderNumber int) (domain.Order, error) {
 	var order domain.Order
-	if err := o.db.GetContext(ctx, &order, `
+	err := o.db.GetContext(ctx, &order, `
 		select * from orders
 		where order_number=$1
-	`, orderNumber); err != nil {
-		return domain.Order{}, errors.Wrapf(err, "failed to get order %d from the database", orderNumber)
-	}
+	`, orderNumber)
 
-	return order, nil
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return order, apperrors.ErrNoSuchOrder
+	case err != nil:
+		return domain.Order{}, errors.Wrapf(err, "failed to get order %d from the database", orderNumber)
+	default:
+		return order, nil
+	}
 }
 
 func (o *OrderStore) GetAllOrders(ctx context.Context, userID int) ([]domain.Order, error) {
