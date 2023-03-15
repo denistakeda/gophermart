@@ -45,6 +45,8 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup.GET("/orders", api.AuthMiddleware, api.getOrdersHandler)
 
 	userGroup.GET("/balance", api.AuthMiddleware, api.balanceHandler)
+
+	userGroup.POST("/withdraw", api.AuthMiddleware, api.withdrawHandler)
 }
 
 type userBody struct {
@@ -143,6 +145,33 @@ func (api *UserAPI) balanceHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, balance)
+}
+
+type withdrawRequest struct {
+	Order string  `json:"order"`
+	Sum   float64 `json:"sum"`
+}
+
+func (api *UserAPI) withdrawHandler(c *gin.Context) {
+	user := api.GetUser(c)
+
+	var request withdrawRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		api.reportError(c, err, http.StatusBadRequest, "wrong withdraw")
+		return
+	}
+
+	err := api.orderService.Withdraw(c, request.Order, request.Sum, user.ID)
+	switch {
+	case errors.Is(err, apperrors.ErrNotEnoughMoney):
+		api.reportError(c, err, http.StatusPaymentRequired, "not enough money")
+	case errors.Is(err, apperrors.ErrIncorrectOrderFormat):
+		api.reportError(c, err, http.StatusUnprocessableEntity, "incorrect order format")
+	case err != nil:
+		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+	default:
+		c.JSON(http.StatusOK, gin.H{"success": "OK"})
+	}
 }
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {

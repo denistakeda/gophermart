@@ -13,4 +13,6 @@ var (
 	ErrOrderWasPostedByAnotherUser = errors.New("the order with such number was already posted by another user")
 	ErrIncorrectOrderFormat        = errors.New("incorrect order format")
 	ErrNoSuchOrder                 = errors.New("no such order in the database")
+
+	ErrNotEnoughMoney = errors.New("not enough money")
 )
