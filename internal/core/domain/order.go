@@ -20,3 +20,8 @@ type Order struct {
 	CreatedAt   time.Time   `db:"created_at" json:"uploaded_at"`
 	UpdatedAt   time.Time   `db:"updated_at" json:"-"`
 }
+
+type UserBalance struct {
+	Current   float64 `json:"current"`
+	Withdrawn float64 `json:"withdrawn"`
+}

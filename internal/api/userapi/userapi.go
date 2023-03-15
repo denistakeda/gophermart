@@ -43,6 +43,8 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 
 	userGroup.POST("/orders", api.AuthMiddleware, api.registerOrderHandler)
 	userGroup.GET("/orders", api.AuthMiddleware, api.getOrdersHandler)
+
+	userGroup.GET("/balance", api.AuthMiddleware, api.balanceHandler)
 }
 
 type userBody struct {
@@ -130,6 +132,17 @@ func (api *UserAPI) getOrdersHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, orders)
+}
+
+func (api *UserAPI) balanceHandler(c *gin.Context) {
+	user := api.GetUser(c)
+
+	balance, err := api.orderService.GetUserBalance(c, &user)
+	if err != nil {
+		api.reportError(c, err, http.StatusInternalServerError, "failed to get user balance")
+	}
+
+	c.JSON(http.StatusOK, balance)
 }
 
 func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
