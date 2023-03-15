@@ -132,6 +132,21 @@ func (mr *MockOrderServiceMockRecorder) GetAllOrders(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllOrders", reflect.TypeOf((*MockOrderService)(nil).GetAllOrders), arg0, arg1)
 }
 
+// GetAllWithdrawals mocks base method.
+func (m *MockOrderService) GetAllWithdrawals(arg0 context.Context, arg1 *domain.User) ([]domain.Withdrawn, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllWithdrawals", arg0, arg1)
+	ret0, _ := ret[0].([]domain.Withdrawn)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllWithdrawals indicates an expected call of GetAllWithdrawals.
+func (mr *MockOrderServiceMockRecorder) GetAllWithdrawals(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllWithdrawals", reflect.TypeOf((*MockOrderService)(nil).GetAllWithdrawals), arg0, arg1)
+}
+
 // GetUserBalance mocks base method.
 func (m *MockOrderService) GetUserBalance(arg0 context.Context, arg1 *domain.User) (domain.UserBalance, error) {
 	m.ctrl.T.Helper()
