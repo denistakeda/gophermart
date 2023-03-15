@@ -44,9 +44,9 @@ func (api *UserAPI) Register(engine *gin.Engine) {
 	userGroup.POST("/orders", api.AuthMiddleware, api.registerOrderHandler)
 	userGroup.GET("/orders", api.AuthMiddleware, api.getOrdersHandler)
 
-	userGroup.GET("/balance", api.AuthMiddleware, api.balanceHandler)
-
-	userGroup.POST("/withdraw", api.AuthMiddleware, api.withdrawHandler)
+	balanceGroup := userGroup.Group("/balance")
+	balanceGroup.GET("/", api.AuthMiddleware, api.balanceHandler)
+	balanceGroup.POST("/withdraw", api.AuthMiddleware, api.withdrawHandler)
 }
 
 type userBody struct {
