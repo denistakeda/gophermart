@@ -202,6 +202,5 @@ func (api *UserAPI) withdrawalsHandler(c *gin.Context) {
 }
 
 func reportError(c *gin.Context, msg string, status int) {
-	//api.logger.Error().Err(err).Msg(msg)
 	c.AbortWithStatusJSON(status, gin.H{"error": msg})
 }

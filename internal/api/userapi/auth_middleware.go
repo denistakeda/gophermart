@@ -13,26 +13,24 @@ import (
 func (api *UserAPI) AuthMiddleware(c *gin.Context) {
 	authHeader := c.GetHeader(AuthorizationHeaderName)
 	if authHeader == "" {
-		msg := "missing auth header"
-		api.reportError(c, errors.New(msg), http.StatusUnauthorized, msg)
+		reportError(c, "missing auth header", http.StatusUnauthorized)
 		return
 	}
 
 	split := strings.Split(authHeader, " ")
 	if len(split) < 2 || split[0] != "Bearer" {
-		msg := "auth header incorrect"
-		api.reportError(c, errors.New(msg), http.StatusUnauthorized, msg)
+		reportError(c, "auth header incorrect", http.StatusUnauthorized)
 		return
 	}
 
 	user, err := api.userService.AuthenticateUser(c, split[1])
 	if errors.Is(err, apperrors.ErrAuthFailed) {
-		msg := "auth incorrect"
-		api.reportError(c, errors.New(msg), http.StatusUnauthorized, msg)
+		reportError(c, "auth incorrect", http.StatusUnauthorized)
 		return
 	} else if err != nil {
 		msg := "failed to authenticate user"
-		api.reportError(c, errors.New(msg), http.StatusInternalServerError, msg)
+		reportError(c, msg, http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg(msg)
 		return
 	}
 
