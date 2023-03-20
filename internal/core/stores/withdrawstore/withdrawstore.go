@@ -20,7 +20,7 @@ func New(db *sqlx.DB) *WithdrawStore {
 func (w *WithdrawStore) GetAllWithdrawals(ctx context.Context, userID int) ([]domain.Withdrawn, error) {
 	var withdrawals []domain.Withdrawn
 	if err := w.db.SelectContext(ctx, &withdrawals, `
-		select * from withdrawals
+		select id, "order", sum, processed_at, user_id from withdrawals
 		where user_id=$1
 		order by processed_at
 	`, userID); err != nil {

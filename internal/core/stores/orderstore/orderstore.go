@@ -33,7 +33,7 @@ func (o *OrderStore) AddNewOrder(ctx context.Context, userID int, orderNumber st
 func (o *OrderStore) GetOrder(ctx context.Context, orderNumber string) (domain.Order, error) {
 	var order domain.Order
 	err := o.db.GetContext(ctx, &order, `
-		select * from orders
+		select id, user_id, order_number, status, accrual, created_at, updated_at from orders
 		where order_number=$1
 	`, orderNumber)
 

@@ -31,7 +31,7 @@ func (u *UserStore) AddNewUser(ctx context.Context, login, passwordHash string) 
 func (u *UserStore) GetUser(ctx context.Context, login string) (domain.User, error) {
 	var user domain.User
 	if err := u.db.GetContext(ctx, &user, `
-		select * from users
+		select id, login, password, created_at from users
 		where login=$1
 	`, login); err != nil {
 		return user, errors.Wrapf(err, "failed to get user %s from the database", login)
