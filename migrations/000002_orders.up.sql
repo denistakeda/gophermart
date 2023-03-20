@@ -10,6 +10,6 @@ create table orders (
         foreign key(user_id)
         references users(id),
 
-    constraint unique_user_id_and_order_number
-        unique (user_id, order_number)
+    constraint unique_order_number
+        unique (order_number)
 );
