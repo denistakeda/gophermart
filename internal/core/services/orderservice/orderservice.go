@@ -45,12 +45,12 @@ func (o *OrderService) AddOrder(ctx context.Context, user *domain.User, orderNum
 				apperrors.ErrOrderWasPostedByThisUser,
 				"such order was already posted by this user",
 			)
-		} else {
-			return errors.Wrap(
-				apperrors.ErrOrderWasPostedByAnotherUser,
-				"such order was already posted by another user",
-			)
 		}
+
+		return errors.Wrap(
+			apperrors.ErrOrderWasPostedByAnotherUser,
+			"such order was already posted by another user",
+		)
 	}
 
 	return o.orderStore.AddNewOrder(ctx, user.ID, orderNumber)
