@@ -1,6 +1,6 @@
 create table withdrawals (
     id serial primary key,
-    "order" varchar not null,
+    order_number varchar not null,
     sum numeric not null,
     processed_at date not null,
     user_id int not null,

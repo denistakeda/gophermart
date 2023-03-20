@@ -20,7 +20,7 @@ func New(db *sqlx.DB) *WithdrawStore {
 func (w *WithdrawStore) GetAllWithdrawals(ctx context.Context, userID int) ([]domain.Withdrawn, error) {
 	var withdrawals []domain.Withdrawn
 	if err := w.db.SelectContext(ctx, &withdrawals, `
-		select id, "order", sum, processed_at, user_id from withdrawals
+		select id, order_number, sum, processed_at, user_id from withdrawals
 		where user_id=$1
 		order by processed_at
 	`, userID); err != nil {
@@ -32,7 +32,7 @@ func (w *WithdrawStore) GetAllWithdrawals(ctx context.Context, userID int) ([]do
 
 func (w *WithdrawStore) AddNewWithdrawn(ctx context.Context, orderNumber string, sum float64, userID int) error {
 	if _, err := w.db.ExecContext(ctx, `
-		insert into withdrawals("order", sum, user_id, processed_at)
+		insert into withdrawals(order_number, sum, user_id, processed_at)
 		values ($1, $2, $3, $4)
 	`, orderNumber, sum, userID, time.Now()); err != nil {
 		return errors.Wrapf(err, "failed to insert withdrawn for order '%s' into a database", orderNumber)
