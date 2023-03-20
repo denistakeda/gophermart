@@ -63,8 +63,8 @@ func (o *OrderStore) GetAllNotFinished(ctx context.Context) ([]domain.Order, err
 	var orders []domain.Order
 	if err := o.db.SelectContext(ctx, &orders, `
 		select * from orders
-		where status=$1 or status=$2
-	`, domain.OrderStatusNew, domain.OrderStatusProcessing); err != nil {
+		where status=any($1)
+	`, []domain.OrderStatus{domain.OrderStatusNew, domain.OrderStatusProcessing}); err != nil {
 		return orders, errors.Wrapf(err, "failed to get list of not finished orders")
 	}
 
