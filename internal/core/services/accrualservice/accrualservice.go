@@ -29,11 +29,7 @@ func (a *AccrualService) CheckAccrual(orderNumber string) (ports.AccrualResponse
 		return ports.AccrualResponse{}, errors.Wrapf(err, "failed to get order '%s' from accrual system", orderNumber)
 	}
 
-	defer func() {
-		if err := resp.Body.Close(); err != nil {
-			a.logger.Error().Err(err).Msg("failed to close body")
-		}
-	}()
+	defer resp.Body.Close()
 
 	var accrualResponse ports.AccrualResponse
 	if err := json.NewDecoder(resp.Body).Decode(&accrualResponse); err != nil {
