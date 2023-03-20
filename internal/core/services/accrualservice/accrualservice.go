@@ -29,6 +29,10 @@ func (a *AccrualService) CheckAccrual(orderNumber string) (ports.AccrualResponse
 		return ports.AccrualResponse{}, errors.Wrapf(err, "failed to get order '%s' from accrual system", orderNumber)
 	}
 
+	if resp.StatusCode != http.StatusOK {
+		return ports.AccrualResponse{}, errors.Errorf("accrual service wrong status: %d", resp.StatusCode)
+	}
+
 	defer resp.Body.Close()
 
 	var accrualResponse ports.AccrualResponse
