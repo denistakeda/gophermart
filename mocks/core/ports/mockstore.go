@@ -184,7 +184,7 @@ func (m *MockWithdrawnStore) EXPECT() *MockWithdrawnStoreMockRecorder {
 }
 
 // AddNewWithdrawn mocks base method.
-func (m *MockWithdrawnStore) AddNewWithdrawn(arg0 context.Context, arg1 string, arg2 float64, arg3 int) error {
+func (m *MockWithdrawnStore) AddNewWithdrawn(arg0 context.Context, arg1 string, arg2, arg3 int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddNewWithdrawn", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)

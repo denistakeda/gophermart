@@ -163,7 +163,7 @@ func (mr *MockOrderServiceMockRecorder) GetUserBalance(arg0, arg1 interface{}) *
 }
 
 // Withdraw mocks base method.
-func (m *MockOrderService) Withdraw(arg0 context.Context, arg1 string, arg2 float64, arg3 *domain.User) error {
+func (m *MockOrderService) Withdraw(arg0 context.Context, arg1 string, arg2 int, arg3 *domain.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Withdraw", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)

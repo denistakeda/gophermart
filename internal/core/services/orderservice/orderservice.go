@@ -78,14 +78,14 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 		return balance, errors.Wrapf(err, "failed to get all withdrawals for the user %s", user.Login)
 	}
 
-	var total float64
+	var total int
 	for _, order := range orders {
 		if order.Status == domain.OrderStatusProcessed {
 			total += order.Accrual
 		}
 	}
 
-	var spent float64
+	var spent int
 	for _, withdrawn := range withdrawals {
 		spent += withdrawn.Sum
 	}
@@ -96,7 +96,7 @@ func (o *OrderService) GetUserBalance(ctx context.Context, user *domain.User) (d
 	return balance, nil
 }
 
-func (o *OrderService) Withdraw(ctx context.Context, orderNumber string, sum float64, user *domain.User) error {
+func (o *OrderService) Withdraw(ctx context.Context, orderNumber string, sum int, user *domain.User) error {
 	if !luhnValid(orderNumber) {
 		return errors.Wrapf(apperrors.ErrIncorrectOrderFormat, "incorrect order number '%s'", orderNumber)
 	}

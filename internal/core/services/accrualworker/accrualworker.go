@@ -50,12 +50,6 @@ func (a *AccrualWorker) Stop() {
 	close(a.stopChan)
 }
 
-type AccrualResponse struct {
-	Order   string  `json:"order"`
-	Status  string  `json:"status"`
-	Accrual float64 `json:"accrual"`
-}
-
 func (a *AccrualWorker) checkOrders() {
 	a.logger.Info().Msg("process unfinished orders")
 	ctx, cancel := context.WithTimeout(context.Background(), checkInterval)
@@ -78,7 +72,7 @@ func (a *AccrualWorker) checkOrders() {
 
 		if resp.Status != string(order.Status) {
 			order.Status = domain.OrderStatus(resp.Status)
-			order.Accrual = resp.Accrual
+			order.Accrual = int(resp.Accrual * 100)
 			updatedOrders = append(updatedOrders, order)
 		}
 	}

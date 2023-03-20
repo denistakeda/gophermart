@@ -3,6 +3,7 @@ package userapi
 import (
 	"fmt"
 	"gophermart/internal/core/apperrors"
+	"gophermart/internal/core/domain"
 	"gophermart/internal/core/ports"
 	"gophermart/internal/core/services/logging"
 	"net/http"
@@ -139,7 +140,12 @@ func (api *UserAPI) getOrdersHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, orders)
+	ordersDisplay := make([]domain.OrderDisplay, len(orders))
+	for i, order := range orders {
+		ordersDisplay[i] = order.ToDisplay()
+	}
+
+	c.JSON(http.StatusOK, ordersDisplay)
 }
 
 func (api *UserAPI) balanceHandler(c *gin.Context) {
@@ -152,7 +158,10 @@ func (api *UserAPI) balanceHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, balance)
+	c.JSON(http.StatusOK, gin.H{
+		"current":   float64(balance.Current) / 100,
+		"withdrawn": float64(balance.Withdrawn) / 100,
+	})
 }
 
 type withdrawRequest struct {
@@ -169,7 +178,7 @@ func (api *UserAPI) withdrawHandler(c *gin.Context) {
 		return
 	}
 
-	err := api.orderService.Withdraw(c, request.Order, request.Sum, &user)
+	err := api.orderService.Withdraw(c, request.Order, int(request.Sum*100), &user)
 	switch {
 	case errors.Is(err, apperrors.ErrNotEnoughMoney):
 		reportError(c, "not enough money", http.StatusPaymentRequired)
@@ -198,7 +207,12 @@ func (api *UserAPI) withdrawalsHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, withdrawals)
+	withdrawalsDisplay := make([]domain.WithdrawnDisplay, len(withdrawals))
+	for i, withdrawal := range withdrawals {
+		withdrawalsDisplay[i] = withdrawal.ToDisplay()
+	}
+
+	c.JSON(http.StatusOK, withdrawalsDisplay)
 }
 
 func reportError(c *gin.Context, msg string, status int) {

@@ -20,5 +20,5 @@ type OrderStore interface {
 
 type WithdrawnStore interface {
 	GetAllWithdrawals(ctx context.Context, userID int) ([]domain.Withdrawn, error)
-	AddNewWithdrawn(ctx context.Context, orderNumber string, sum float64, userID int) error
+	AddNewWithdrawn(ctx context.Context, orderNumber string, sum int, userID int) error
 }

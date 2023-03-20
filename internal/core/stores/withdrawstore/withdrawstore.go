@@ -30,7 +30,7 @@ func (w *WithdrawStore) GetAllWithdrawals(ctx context.Context, userID int) ([]do
 	return withdrawals, nil
 }
 
-func (w *WithdrawStore) AddNewWithdrawn(ctx context.Context, orderNumber string, sum float64, userID int) error {
+func (w *WithdrawStore) AddNewWithdrawn(ctx context.Context, orderNumber string, sum int, userID int) error {
 	if _, err := w.db.ExecContext(ctx, `
 		insert into withdrawals(order_number, sum, user_id, processed_at)
 		values ($1, $2, $3, $4)
