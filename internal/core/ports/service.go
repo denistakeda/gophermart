@@ -18,3 +18,13 @@ type OrderService interface {
 	Withdraw(ctx context.Context, orderNumber string, sum float64, user *domain.User) error
 	GetAllWithdrawals(ctx context.Context, user *domain.User) ([]domain.Withdrawn, error)
 }
+
+type AccrualResponse struct {
+	Order   string  `json:"order"`
+	Status  string  `json:"status"`
+	Accrual float64 `json:"accrual"`
+}
+
+type AccrualService interface {
+	CheckAccrual(orderNumber string) (AccrualResponse, error)
+}

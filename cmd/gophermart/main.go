@@ -4,6 +4,7 @@ import (
 	"context"
 	"gophermart/internal/api/userapi"
 	"gophermart/internal/core/services/accrualservice"
+	"gophermart/internal/core/services/accrualworker"
 	"gophermart/internal/core/services/config"
 	"gophermart/internal/core/services/db"
 	"gophermart/internal/core/services/logging"
@@ -47,7 +48,8 @@ func main() {
 	srv := server.NewServer(":8080", engine, logService)
 	userService := userservice.New(conf.Secret, logService, userStore)
 	orderService := orderservice.New(logService, orderStore, withdrawStore)
-	accrualService := accrualservice.New(conf.AccrualSystemAddress, orderStore, logService)
+	accrualService := accrualservice.New(conf.AccrualSystemAddress, logService)
+	accrualWorker := accrualworker.New(accrualService, orderStore, logService)
 
 	// APIs
 	userAPI := userapi.New(logService, userService, orderService)
@@ -57,8 +59,8 @@ func main() {
 	srv.Start()
 	defer srv.Stop(context.Background())
 
-	accrualService.Run()
-	defer accrualService.Stop()
+	accrualWorker.Run()
+	defer accrualWorker.Stop()
 
 	waitSigterm(mainLogger)
 }
