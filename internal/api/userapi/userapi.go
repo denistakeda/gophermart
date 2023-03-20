@@ -59,16 +59,17 @@ type userBody struct {
 func (api *UserAPI) registerUserHandler(c *gin.Context) {
 	var body userBody
 	if err := c.ShouldBindJSON(&body); err != nil {
-		api.reportError(c, err, http.StatusBadRequest, "invalid body")
+		reportError(c, "invalid body", http.StatusBadRequest)
 		return
 	}
 
 	token, err := api.userService.RegisterUser(c, body.Login, body.Password)
 	if errors.Is(err, apperrors.ErrLoginIsBusy) {
-		api.reportError(c, err, http.StatusConflict, "login is busy")
+		reportError(c, "login is busy", http.StatusConflict)
 		return
 	} else if err != nil {
-		api.reportError(c, err, http.StatusInternalServerError, "server error")
+		reportError(c, "server error", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to register user")
 		return
 	}
 
@@ -79,16 +80,17 @@ func (api *UserAPI) registerUserHandler(c *gin.Context) {
 func (api *UserAPI) loginUserHandler(c *gin.Context) {
 	var body userBody
 	if err := c.ShouldBindJSON(&body); err != nil {
-		api.reportError(c, err, http.StatusBadRequest, "invalid body")
+		reportError(c, "invalid body", http.StatusBadRequest)
 		return
 	}
 
 	token, err := api.userService.LoginUser(c, body.Login, body.Password)
 	if errors.Is(err, apperrors.ErrLoginOrPasswordIncorrect) {
-		api.reportError(c, err, http.StatusUnauthorized, "login or password incorrect")
+		reportError(c, "login or password incorrect", http.StatusUnauthorized)
 		return
 	} else if err != nil {
-		api.reportError(c, err, http.StatusInternalServerError, "server error")
+		reportError(c, "server error", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to login user")
 		return
 	}
 
@@ -101,7 +103,7 @@ func (api *UserAPI) registerOrderHandler(c *gin.Context) {
 
 	body, err := c.GetRawData()
 	if err != nil {
-		api.reportError(c, err, http.StatusBadRequest, "order should be a number")
+		reportError(c, "order should be a number", http.StatusBadRequest)
 		return
 	}
 
@@ -110,11 +112,12 @@ func (api *UserAPI) registerOrderHandler(c *gin.Context) {
 	case errors.Is(err, apperrors.ErrOrderWasPostedByThisUser):
 		c.JSON(http.StatusOK, gin.H{"success": "order with such number was already posted by this user"})
 	case errors.Is(err, apperrors.ErrOrderWasPostedByAnotherUser):
-		api.reportError(c, err, http.StatusConflict, "order with such number was already posted by another user")
+		reportError(c, "order with such number was already posted by another user", http.StatusConflict)
 	case errors.Is(err, apperrors.ErrIncorrectOrderFormat):
-		api.reportError(c, err, http.StatusUnprocessableEntity, "incorrect order format")
+		reportError(c, "incorrect order format", http.StatusUnprocessableEntity)
 	case err != nil:
-		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+		reportError(c, "internal server error", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to register order")
 	default:
 		c.JSON(http.StatusAccepted, gin.H{"success": "order was successfully created"})
 	}
@@ -126,7 +129,8 @@ func (api *UserAPI) getOrdersHandler(c *gin.Context) {
 
 	orders, err := api.orderService.GetAllOrders(c, &user)
 	if err != nil {
-		api.reportError(c, err, http.StatusInternalServerError, "failed to fetch list of orders for a user")
+		reportError(c, "failed to fetch list of orders for a user", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to fetch orders")
 		return
 	}
 
@@ -143,7 +147,9 @@ func (api *UserAPI) balanceHandler(c *gin.Context) {
 
 	balance, err := api.orderService.GetUserBalance(c, &user)
 	if err != nil {
-		api.reportError(c, err, http.StatusInternalServerError, "failed to get user balance")
+		reportError(c, "failed to get user balance", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to fetch user balance")
+		return
 	}
 
 	c.JSON(http.StatusOK, balance)
@@ -159,18 +165,19 @@ func (api *UserAPI) withdrawHandler(c *gin.Context) {
 
 	var request withdrawRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		api.reportError(c, err, http.StatusBadRequest, "wrong withdraw")
+		reportError(c, "wrong withdraw", http.StatusBadRequest)
 		return
 	}
 
 	err := api.orderService.Withdraw(c, request.Order, request.Sum, &user)
 	switch {
 	case errors.Is(err, apperrors.ErrNotEnoughMoney):
-		api.reportError(c, err, http.StatusPaymentRequired, "not enough money")
+		reportError(c, "not enough money", http.StatusPaymentRequired)
 	case errors.Is(err, apperrors.ErrIncorrectOrderFormat):
-		api.reportError(c, err, http.StatusUnprocessableEntity, "incorrect order format")
+		reportError(c, "incorrect order format", http.StatusUnprocessableEntity)
 	case err != nil:
-		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+		reportError(c, "internal server error", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to fetch withdraw points")
 	default:
 		c.JSON(http.StatusOK, gin.H{"success": "OK"})
 	}
@@ -181,7 +188,8 @@ func (api *UserAPI) withdrawalsHandler(c *gin.Context) {
 
 	withdrawals, err := api.orderService.GetAllWithdrawals(c, &user)
 	if err != nil {
-		api.reportError(c, err, http.StatusInternalServerError, "internal server error")
+		reportError(c, "internal server error", http.StatusInternalServerError)
+		api.logger.Error().Err(err).Msg("failed to fetch a list of withdrawals")
 		return
 	}
 
@@ -193,7 +201,7 @@ func (api *UserAPI) withdrawalsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, withdrawals)
 }
 
-func (api *UserAPI) reportError(c *gin.Context, err error, status int, msg string) {
-	api.logger.Error().Err(err).Msg(msg)
+func reportError(c *gin.Context, msg string, status int) {
+	//api.logger.Error().Err(err).Msg(msg)
 	c.AbortWithStatusJSON(status, gin.H{"error": msg})
 }
